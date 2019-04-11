@@ -1,12 +1,10 @@
 #include "lowlevel/theyseemerolling.h"
 #include "lowlevel/clock.h"
-#include "lowlevel/eeprom.h"
 
 int main() {
   clock_setup();
 
   gpio_setup();
-  eeprom_setup();
   encoders_setup();
 
   // set_all_1();

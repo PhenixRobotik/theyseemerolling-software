@@ -76,10 +76,8 @@ all: tsmr.hex
 
 
 tsmr.elf: main.c.o \
-		lowlevel/adc.c.o \
 		lowlevel/can.c.o \
 		lowlevel/clock.c.o \
-		lowlevel/eeprom.c.o \
 		lowlevel/encoders.c.o \
 		lowlevel/gpio.c.o \
 		lowlevel/motors.c.o

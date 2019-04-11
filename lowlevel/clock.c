@@ -35,4 +35,4 @@ void delay_ms(uint32_t ms) {
 
 
 const uint32_t millisec = 1600;
-const uint32_t second = millisec*1000;
+const uint32_t second = 1600*1000;
