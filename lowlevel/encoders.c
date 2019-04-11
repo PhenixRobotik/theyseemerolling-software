@@ -50,3 +50,31 @@ int encoder_right_get_counter(void)
     return ENCODER_PERIOD-timer_get_counter(ENCODER_R_TIM);
   return timer_get_counter(ENCODER_R_TIM);
 }
+
+int encoder_left_update(volatile int *prev_count)
+{
+  const int cnt = encoder_left_get_counter();
+
+  int dl = cnt - *prev_count;
+  *prev_count = cnt;
+  if(dl > 1){
+    dl = -1;
+  }else if(dl < -1){
+    dl = +1;
+  }
+  return dl;
+}
+
+int encoder_right_update(volatile int *prev_count)
+{
+  const int cnt = encoder_right_get_counter();
+
+  int dl = cnt - *prev_count;
+  *prev_count = cnt;
+  if(dl > 1){
+    dl = -1;
+  }else if(dl < -1){
+    dl = +1;
+  }
+  return dl;
+}

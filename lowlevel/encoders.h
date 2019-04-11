@@ -5,8 +5,8 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/timer.h>
 
-#define ENCODER_PERIOD 1024 //number of ticks per turn
-#define ENCODER_INPUT_CFG GPIO_PUPD_PULLUP // GPIO_PUPD_PULLUP  GPIO_PUPD_PULLDOWN GPIO_PUPD_NONE
+#define ENCODER_PERIOD 300*4-1 //number of ticks per turn, encoder 300CPR
+#define ENCODER_INPUT_CFG GPIO_PUPD_PULLUP // GPIO_PUPD_PULLUP GPIO_PUPD_PULLDOWN GPIO_PUPD_NONE
 
 /*******************************
 Left encoder configuration
@@ -49,5 +49,8 @@ void encoder_left_setup(void);
 void encoder_right_setup(void);
 int encoder_left_get_counter(void);
 int encoder_right_get_counter(void);
+
+int encoder_left_update(volatile int *prev_count);//delta steps in small time difference
+int encoder_right_update(volatile int *prev_count);
 
 #endif
