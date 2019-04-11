@@ -37,7 +37,6 @@ LFlags += \
 	-lg \
 	-lrdimon
 
-
 # MCU specific flags (stm32f401re)
 LINKER_SCRIPTS_DIR = $(Makefile_path)/hal_common/linker_scripts
 
@@ -79,8 +78,9 @@ tsmr.elf: main.c.o \
 		lowlevel/can.c.o \
 		lowlevel/clock.c.o \
 		lowlevel/encoders.c.o \
+		lowlevel/odometry.c.o \
 		lowlevel/gpio.c.o \
-		lowlevel/motors.c.o
+		lowlevel/debug.c.o
 	@$(CC) $^ $(LFlags) -o $@
 	@echo LINK $@
 

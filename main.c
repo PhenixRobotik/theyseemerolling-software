@@ -1,14 +1,15 @@
 #include "lowlevel/theyseemerolling.h"
 #include "lowlevel/clock.h"
+#include "lowlevel/odometry.h"
 
 int main() {
   clock_setup();
 
   gpio_setup();
-  encoders_setup();
+  encoder_right_setup();
 
   // set_all_1();
-  bool status = about_da_power();
+  /*bool status = about_da_power();
 
 
 
@@ -31,6 +32,6 @@ int main() {
     delay_ms(100);
     led_set_status(0);
     delay_ms(700);
-  }
+  }*/
   return 0;
 }
