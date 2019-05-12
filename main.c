@@ -31,12 +31,21 @@ int main() {
   odometry odom;
   odometry_get_position();
 
+  set_theta_speed(&fsm_asser,1.57/2.0);
+  set_theta(&fsm_asser,1.57);
+
   while(1)
   {
     fsm->run(fsm);
     odom = odometry_get_position();
 
     //print_odometry(&odom);
+
+    get_order(&fsm_asser, &sum_goal, &diff_goal);
+    echo_int(sum_goal);
+    echo("|");
+    echo_int(diff_goal);
+    echo("\n\r");
 
     voltage_sum = pid(
       &pid_delta,

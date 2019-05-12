@@ -12,6 +12,7 @@
 #define MICROS_SYSTICK_RATIO (1000000 / SYSTICK_FREQ_HZ)
 
 #define MILLIS_TO_SYSTICK(ms) (ms * 1000 / MICROS_SYSTICK_RATIO)
+#define SYSTICK_TO_MILLIS(ticks) (ticks * MICROS_SYSTICK_RATIO / 1000)
 // inline constexpr int32_t MILLIS_TO_SYSTICK(uint32_t ms) {
 //     return ms * 1000 / MICROS_SYSTICK_RATIO;
 // }

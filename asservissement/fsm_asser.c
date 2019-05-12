@@ -25,14 +25,29 @@ void set_translation_speed(FSM_asser *fsm_asser,double vt)//in mm/s
   fsm_asser->linear_speed=vt;
 }
 
+void set_translation(FSM_asser *fsm_asser,double t)
+{
+  fsm_asser->pos=t;
+  fsm_asser->initial_sum=fsm_asser->sum_goal;
+  fsm_asser->t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
+  FSM_Instance *fsm=&(fsm_asser->instance);
+  FSM_NEXT(fsm,FSM_asser_translation,0);
+  fsm->status=FSM_RUNNING;
+}
+
 void set_theta_speed(FSM_asser *fsm_asser,double vth)
 {
   fsm_asser->angular_speed=vth;
 }
 
-void set_theta(FSM_asser *fsm_asser,double theta)
+void set_theta(FSM_asser *fsm_asser,double theta)//TODO: set the shortest angle, attention theta0
 {
-  
+  fsm_asser->angle=theta;
+  fsm_asser->initial_diff=fsm_asser->diff_goal;
+  fsm_asser->t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
+  FSM_Instance *fsm=&(fsm_asser->instance);
+  FSM_NEXT(fsm,FSM_asser_angle,0);
+  fsm->status=FSM_RUNNING;
 }
 
 
@@ -46,18 +61,49 @@ void get_order(FSM_asser *fsm_asser,long int *sum_goal,long int *diff_goal)//jus
 
 
 
-
-
-void FSM_asser_init(FSM_Instance *fsm)
+void FSM_asser_translation(FSM_Instance *fsm)
 {
-  fsm->status=FSM_RUNNING;
-  FSM_asser *fsm_pos=(FSM_asser *) fsm;
-  FSM_NEXT(fsm,FSM_asser_end,0);
-  echo("init\n\r");
+  FSM_asser *fsm_asser=(FSM_asser *) fsm;
+  double t=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
+  double pos=(t-fsm_asser->t0)*fsm_asser->linear_speed;
+  if(fsm_asser->pos<0)
+  {
+    pos=-pos;
+  }
+
+  if(fsm_asser->pos>0 && pos>fsm_asser->pos)
+  {
+    pos=fsm_asser->pos;
+    FSM_NEXT(fsm,FSM_NOP,0);//done
+  }
+  else if(fsm_asser->pos<0 && pos<fsm_asser->pos)
+  {
+    pos=fsm_asser->pos;
+    FSM_NEXT(fsm,FSM_NOP,0);//done
+  }
+  fsm_asser->sum_goal=(2*pos/Encoders_Dist_Per_Step)+fsm_asser->initial_sum;
 }
 
-void FSM_asser_end(FSM_Instance *fsm)
+
+void FSM_asser_angle(FSM_Instance *fsm)
 {
-  fsm->status=FSM_SUCCESS;
-  echo("end\n\r");
+  FSM_asser *fsm_asser=(FSM_asser *) fsm;
+  double t=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
+  double angle=(t-fsm_asser->t0)*fsm_asser->angular_speed;
+  if(fsm_asser->angle<0)
+  {
+    angle=-angle;
+  }
+
+  if(fsm_asser->angle>0 && angle>fsm_asser->angle)
+  {
+    angle=fsm_asser->angle;
+    FSM_NEXT(fsm,FSM_NOP,0);//done
+  }
+  else if(fsm_asser->angle<0 && angle<fsm_asser->angle)
+  {
+    angle=fsm_asser->angle;
+    FSM_NEXT(fsm,FSM_NOP,0);//done
+  }
+  fsm_asser->diff_goal=(angle/Encoders_Theta_Per_Diff)+fsm_asser->initial_diff;
 }

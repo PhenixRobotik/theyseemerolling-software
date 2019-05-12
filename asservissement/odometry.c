@@ -59,7 +59,7 @@ void timX_isr(void)
     odometry_internal.left_total_count+=dl_l;
     odometry_internal.right_total_count+=dl_r;
 
-    double tmp_delta = Encoders_Dist_Per_Step * (dl_l + dl_r)/2;
+    double tmp_delta = Encoders_Dist_Per_Step * (dl_l + dl_r)/2;//TODO: replace by sigma
 
     // update the position
     odometry_internal.x += tmp_delta * cos(odometry_internal.theta);
