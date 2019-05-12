@@ -8,3 +8,7 @@
 
 # log files
 *.log
+
+
+# Meson
+/_build
