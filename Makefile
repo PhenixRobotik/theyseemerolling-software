@@ -93,9 +93,11 @@ tsmr.elf: \
 		lowlevel/encoders.c.o \
 		lowlevel/gpio.c.o \
 		lowlevel/motors.c.o \
+		fsm/fsm_master.c.o \
 		asservissement/calibration.c.o \
 		asservissement/odometry.c.o \
 		asservissement/pid.c.o \
+		asservissement/fsm_asser.c.o \
 		main.c.o \
 		|
 	$(CC) $(CFlags) $^ $(LFlags) -o $@

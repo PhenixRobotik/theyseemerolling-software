@@ -14,7 +14,7 @@ const double Encoders_Theta_Per_Diff = Encoders_Dist_Per_Step / Encoders_Axis_Di
 const PID_Configuration PID_Configuration_delta = {
   .Te = 0.01,
 
-  .Kp = 0.0,//0.001,
+  .Kp = 0.001,
   .Ki = 0.00,
   .Kd = 0.000,
 
