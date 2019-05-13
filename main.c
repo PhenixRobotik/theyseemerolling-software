@@ -8,7 +8,22 @@
 #include "asservissement/pid.h"
 #include "asservissement/calibration.h"
 
+void asservissement();
+
 int main() {
+  clock_setup();
+  gpio_setup();
+  debug_setup();
+  motors_setup();
+  odometry_setup();
+  
+  asservissement();
+  
+  while (1) {};
+  return 0;
+}
+
+void asservisement() {
   float voltage_A=0,
         voltage_B=0,
         voltage_sum=0,
@@ -23,11 +38,6 @@ int main() {
   init_FSM_asser(&fsm_asser);
   FSM_Instance *fsm= (FSM_Instance*)&fsm_asser;//set the current fsm to fsm_asser
 
-  clock_setup();
-  gpio_setup();
-  debug_setup();
-  motors_setup();
-  odometry_setup();
   odometry odom;
   odometry_get_position();
 
@@ -63,6 +73,4 @@ int main() {
     motor_b_set(voltage_B);
     delay_ms(pid_delta.conf->Te);
   }
-
-  return 0;
 }
