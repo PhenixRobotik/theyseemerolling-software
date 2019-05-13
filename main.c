@@ -3,7 +3,7 @@
 #include "lowlevel/debug.h"
 #include "lowlevel/motors.h"
 
-#include "asservissement/fsm_asser.h"
+#include "fsm/fsm_asser.h"
 #include "asservissement/odometry.h"
 #include "asservissement/pid.h"
 #include "asservissement/calibration.h"
@@ -16,14 +16,14 @@ int main() {
   debug_setup();
   motors_setup();
   odometry_setup();
-  
+
   asservissement();
-  
+
   while (1) {};
   return 0;
 }
 
-void asservisement() {
+void asservissement() {
   float voltage_A=0,
         voltage_B=0,
         voltage_sum=0,
@@ -41,8 +41,8 @@ void asservisement() {
   odometry odom;
   odometry_get_position();
 
-  set_theta_speed(&fsm_asser,1.57/2.0);
-  set_theta(&fsm_asser,1.57);
+  //set_theta_speed(&fsm_asser,1.57/2.0);
+  //set_theta(&fsm_asser,1.57);
 
   while(1)
   {

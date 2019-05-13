@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../fsm/fsm_master.h"
+#include "fsm_master.h"
 #include "../lowlevel/debug.h"
-#include "odometry.h"
-#include "calibration.h"
+#include "../asservissement/odometry.h"
+#include "../asservissement/calibration.h"
 
 typedef struct FSM_asser_S{
   FSM_Instance instance;
