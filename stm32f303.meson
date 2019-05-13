@@ -23,6 +23,16 @@ openocd = 'openocd'
 [properties]
 has_function_printf = false
 
+
+size    = 'arm-none-eabi-size'
+objdump = 'arm-none-eabi-objdump'
+objcopy = 'arm-none-eabi-objcopy'
+strip   = 'arm-none-eabi-strip'
+gdb     = 'arm-none-eabi-gdb'
+terminal= 'x-terminal-emulator'
+openocd = 'openocd'
+
+
 c_args = [
   '-mthumb',              # define language
 
@@ -41,13 +51,13 @@ c_args = [
   # Optimizations
   '-Os',
   '-g',
-]
+  ]
 
 cpp_args = [
   # -fno-common \
   # -fno-exceptions \
 
-]
+  ]
 
 
 c_link_args = [
@@ -58,7 +68,14 @@ c_link_args = [
   '-lc',
   '-lg',
   '-lrdimon',
-]
+
+  '-mcpu=cortex-m4', # may be set by host_machine ?
+  '-mfloat-abi=hard',
+  '-mfpu=fpv4-sp-d16',
+  '-specs=nano.specs',
+
+
+  ]
 
 
 [host_machine]

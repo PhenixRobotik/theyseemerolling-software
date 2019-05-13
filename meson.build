@@ -21,9 +21,9 @@ c_args = []
 cpu = host_machine.cpu() == 'cortex-m0+' ? 'cortex-m0plus' : host_machine.cpu()
 c_args += '-mcpu=@0@'.format( cpu )
 
-objcopy = 'objcopy'
-size = 'size'
-openocd = 'openocd'
+objcopy = meson.get_cross_property('objcopy')
+size    = meson.get_cross_property('size')
+openocd = meson.get_cross_property('openocd')
 
 ###############################################################################
 # Libopencm3
@@ -35,7 +35,7 @@ run_target('libopencm3',
 )
 
 libopencm3_include = include_directories(libopencm3_dir / 'include')
-libopencm3_defines = [ '-D@0  @'.format(libopencm3_mcu.to_upper()) ]
+libopencm3_defines = [ '-D@0@'.format(libopencm3_mcu.to_upper()) ]
 libopencm3_library = cc.find_library(
   'opencm3_@0@'.format(libopencm3_mcu),
   dirs: meson.source_root() / libopencm3_dir / 'lib',
@@ -46,12 +46,19 @@ if not libopencm3_library.found()
   warning('Libopencm3 library not found, please run "ninja libopencm3"')
 endif
 
+libopencm3 = declare_dependency(
+  compile_args:         libopencm3_defines,
+  include_directories:  libopencm3_include,
+  dependencies:         libopencm3_library,
+)
+
 ###############################################################################
 # Linking
 
 linker_script_dir = meson.source_root() / 'hal_common/linker_scripts'
 linker_script_link = [
-  '-T', linker_script_dir / '@0@.ld'.format(linkscript_mcu)
+  '-T', linker_script_dir / '@0@.ld'.format(linkscript_mcu),
+  '-L' + meson.source_root() / libopencm3_dir / 'lib',
 ]
 
 ###############################################################################
@@ -67,7 +74,7 @@ run_target('install_udev',
 # Project
 
 
-lowlevel = library('lowlevel',
+lowlevel = static_library('lowlevel',
   'lowlevel/adc.c',
   'lowlevel/can.c',
   'lowlevel/clock.c',
@@ -76,28 +83,26 @@ lowlevel = library('lowlevel',
   'lowlevel/encoders.c',
   'lowlevel/gpio.c',
   'lowlevel/motors.c',
-
-  include_directories: libopencm3_include,
+  dependencies: libopencm3,
 )
 
-asservissement = library('asservissement',
+asservissement = static_library('asservissement',
   'asservissement/calibration.c',
   'asservissement/odometry.c',
   'asservissement/pid.c',
   'asservissement/fsm_asser.c',
-
-  include_directories: libopencm3_include,
+  dependencies: libopencm3,
 )
 
-finite_state_machine = library('fsm',
+finite_state_machine = static_library('fsm',
   'fsm/fsm_master.c',
-  include_directories: libopencm3_include,
+  dependencies: libopencm3,
 )
 
 #############################
 # CAN support
 
-can_support = library('can_bus',
+can_support = static_library('can_bus',
   'libcanard/canard.c',
 
   include_directories: 'libcanard'
@@ -116,7 +121,7 @@ executables += executable('tsmr.elf',
     asservissement,
     finite_state_machine,
   ],
-  dependencies: libopencm3_library,
+  dependencies: libopencm3,
   link_args: linker_script_link,
 )
 
@@ -127,7 +132,7 @@ executables += executable('tsmr_tests.elf',
     asservissement,
     finite_state_machine,
   ],
-  dependencies: libopencm3_library,
+  dependencies: libopencm3,
   link_args: linker_script_link,
 )
 
@@ -162,13 +167,15 @@ foreach exe : executables
   )
 
 
-  run_target('@0@.flash'.format(exe_name),
+  custom_target('@0@.flash'.format(exe_name),
+    input : hex,
+    output: '@0@.flash'.format(exe_name),
     depends: hex,
     command: [
       openocd, '-f', openocd_config,
       '-c', 'init',
       '-c', 'reset init',
-      '-c', 'flash write_image erase @0@'.format(hex),
+      '-c', 'flash write_image erase @0@'.format(hex.full_path()),
       '-c', 'reset',
       '-c', 'shutdown',
     ],
