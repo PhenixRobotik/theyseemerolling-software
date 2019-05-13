@@ -24,11 +24,11 @@ int main() {
 }
 
 void asservissement() {
-  float voltage_A=0,
+  double voltage_A=0,
         voltage_B=0,
         voltage_sum=0,
         voltage_diff=0; // motor control variables
-  long int sum_goal=0, diff_goal=0;
+  double sum_goal=0, diff_goal=0;
 
   PID_Status pid_delta, pid_theta;
   pid_init(&pid_delta, &PID_Configuration_delta);
@@ -41,8 +41,11 @@ void asservissement() {
   odometry odom;
   odometry_get_position();
 
-  //set_theta_speed(&fsm_asser,1.57/2.0);
-  //set_theta(&fsm_asser,1.57);
+  //set_theta_speed(&fsm_asser,1.57/5.0);
+  //set_theta(&fsm_asser,-1.57);
+
+  set_translation_speed(&fsm_asser,40.0);
+  set_translation(&fsm_asser,-100.0);
 
   while(1)
   {
@@ -52,18 +55,19 @@ void asservissement() {
     //print_odometry(&odom);
 
     get_order(&fsm_asser, &sum_goal, &diff_goal);
-    echo_int(sum_goal);
+
+    /*echo_int(sum_goal);
     echo("|");
     echo_int(diff_goal);
-    echo("\n\r");
+    echo("\n\r");*/
 
     voltage_sum = pid(
       &pid_delta,
-      sum_goal - 0.5 * (odom.left_total_count + odom.right_total_count)
+      sum_goal - 0.5 * (odom.left_total_distance + odom.right_total_distance)
     );
     voltage_diff = pid(
       &pid_theta,
-      diff_goal - (odom.right_total_count - odom.left_total_count)
+      diff_goal - (odom.right_total_distance - odom.left_total_distance)
     );
 
     voltage_A = voltage_sum + voltage_diff;

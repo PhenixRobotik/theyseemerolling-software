@@ -12,12 +12,12 @@ typedef struct FSM_asser_S{
   double linear_speed;//in mm/s positive
   double angular_speed;//in rad/s positive
 
-  long int initial_sum;
-  long int initial_diff;
+  double initial_sum;
+  double initial_diff;
   uint32_t t0;
 
-  long int sum_goal;
-  long int diff_goal;
+  double sum_goal;
+  double diff_goal;
 }FSM_asser;
 
 void init_FSM_asser(FSM_asser *fsm_asser);
@@ -29,7 +29,7 @@ void set_translation(FSM_asser *fsm_asser,double t);//in mm
 void set_translation_speed(FSM_asser *fsm_asser,double vt);//in mm/s
 void set_X_Y_theta(FSM_asser *fsm_asser,double x,double y,double theta);//mm mm rad
 
-void get_order(FSM_asser *fsm_asser,long int *sum_goal,long int *diff_goal);
+void get_order(FSM_asser *fsm_asser,double *sum_goal,double *diff_goal);
 
 void FSM_asser_angle(FSM_Instance *fsm);
 void FSM_asser_translation(FSM_Instance *fsm);

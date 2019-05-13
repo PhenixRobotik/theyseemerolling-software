@@ -19,9 +19,11 @@ typedef struct{//positions in mm and angles in rad
   double theta;
 
   int left_count;//last encoders count
-  int left_total_count;
+  int left_total_count;//do not use this in asser
+  double left_total_distance;//in mm update only when odometry_get_position called
   int right_count;
   int right_total_count;
+  double right_total_distance;//in mm update only when odometry_get_position called
 } odometry;
 
 void odometry_setup();

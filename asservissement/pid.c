@@ -17,7 +17,7 @@ void pid_init(PID_Status *pid, PID_Configuration const* config)
 	pid->conf = config;
 }
 
-double pid(PID_Status *pid, int eps)
+double pid(PID_Status *pid, double eps)
 {
   eps = min(eps,  pid->conf->max_eps);
   eps = max(eps, -pid->conf->max_eps);
@@ -32,7 +32,7 @@ double pid(PID_Status *pid, int eps)
   return output;
 }
 
-bool reached(PID_Status *pid, int eps)
+bool reached(PID_Status *pid, double eps)
 {
 	return (
 		abs(eps) < pid->conf->position_tolerance

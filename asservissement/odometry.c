@@ -59,11 +59,11 @@ void timX_isr(void)
     odometry_internal.left_total_count+=dl_l;
     odometry_internal.right_total_count+=dl_r;
 
-    double tmp_delta = Encoders_Dist_Per_Step * (dl_l + dl_r)/2;//TODO: replace by sigma
+    double tmp_sigma = Encoders_Dist_Per_Step * (dl_l + dl_r)/2;
 
     // update the position
-    odometry_internal.x += tmp_delta * cos(odometry_internal.theta);
-    odometry_internal.y += tmp_delta * sin(odometry_internal.theta);
+    odometry_internal.x += tmp_sigma * cos(odometry_internal.theta);
+    odometry_internal.y += tmp_sigma * sin(odometry_internal.theta);
     odometry_internal.theta += Encoders_Theta_Per_Diff * (dl_l-dl_r);
 
     //limit robot angle between -Pi and Pi
@@ -80,6 +80,8 @@ void timX_isr(void)
 
 odometry odometry_get_position()
 {
+	odometry_internal.left_total_distance=odometry_internal.left_total_count*Encoders_Dist_Per_Step;
+	odometry_internal.right_total_distance=odometry_internal.right_total_count*Encoders_Dist_Per_Step;
   return odometry_internal;
 }
 
@@ -88,8 +90,12 @@ void print_odometry(odometry *odom) {
   echo("\r\n");
   echo("\r\nl=");
   echo_int((int)odom->left_count);
+	echo(" ");
+	echo_int((int)odom->left_total_distance);
   echo("\t; r=");
   echo_int((int)odom->right_count);
+	echo(" ");
+	echo_int((int)odom->right_total_distance);
 
   echo("\r\nx=");
   echo_int((int)odom->x);

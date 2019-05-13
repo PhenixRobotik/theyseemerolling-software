@@ -14,10 +14,10 @@ typedef struct {
  double Ki;
  double Kd;
 
- int max_eps; // Capping the PID
+ double max_eps; // Capping the PID
 
  // Zone around "zero" where response is zero.
- int position_tolerance;
+ double position_tolerance;
  double speed_tolerance;
 
 } PID_Configuration;
@@ -31,5 +31,5 @@ typedef struct {
 } PID_Status;
 
 void pid_init(PID_Status *pid, PID_Configuration const* config);
-double pid(PID_Status *pid, int eps);
-bool reached(PID_Status *pid,int eps);
+double pid(PID_Status *pid, double eps);
+bool reached(PID_Status *pid,double eps);

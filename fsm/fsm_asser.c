@@ -10,8 +10,8 @@ void init_FSM_asser(FSM_asser *fsm_asser)//init the FSM in a stop state
 void set_stop(FSM_asser *fsm_asser)//stop the robot at the current position and the fsm
 {
   odometry odom=odometry_get_position();
-  fsm_asser->sum_goal=0.5 * (odom.left_total_count + odom.right_total_count);//stop at current position
-  fsm_asser->diff_goal=odom.right_total_count - odom.left_total_count;
+  fsm_asser->sum_goal=0.5 * (odom.left_total_distance + odom.right_total_distance);//stop at current position
+  fsm_asser->diff_goal=odom.right_total_distance - odom.left_total_distance;
 
   FSM_Instance *fsm=&(fsm_asser->instance);//stop the fsm execution
   FSM_NEXT(fsm,FSM_NOP,0);
@@ -53,7 +53,7 @@ void set_theta(FSM_asser *fsm_asser,double theta)//TODO: set the shortest angle,
 
 
 
-void get_order(FSM_asser *fsm_asser,long int *sum_goal,long int *diff_goal)//just return the orders
+void get_order(FSM_asser *fsm_asser,double *sum_goal,double *diff_goal)//just return the orders
 {
   *sum_goal=fsm_asser->sum_goal;
   *diff_goal=fsm_asser->diff_goal;
@@ -81,7 +81,7 @@ void FSM_asser_translation(FSM_Instance *fsm)
     pos=fsm_asser->pos;
     FSM_NEXT(fsm,FSM_NOP,0);//done
   }
-  fsm_asser->sum_goal=(2*pos/Encoders_Dist_Per_Step)+fsm_asser->initial_sum;
+  fsm_asser->sum_goal=2*pos+fsm_asser->initial_sum;
 }
 
 
@@ -105,5 +105,5 @@ void FSM_asser_angle(FSM_Instance *fsm)
     angle=fsm_asser->angle;
     FSM_NEXT(fsm,FSM_NOP,0);//done
   }
-  fsm_asser->diff_goal=(angle/Encoders_Theta_Per_Diff)+fsm_asser->initial_diff;
+  fsm_asser->diff_goal=angle*Encoders_Axis_Distance+fsm_asser->initial_diff;
 }
