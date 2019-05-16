@@ -81,7 +81,7 @@ void FSM_asser_translation(FSM_Instance *fsm)
     pos=fsm_asser->pos;
     FSM_NEXT(fsm,FSM_NOP,0);//done
   }
-  fsm_asser->sum_goal=2*pos+fsm_asser->initial_sum;
+  fsm_asser->sum_goal=pos+fsm_asser->initial_sum;
 }
 
 

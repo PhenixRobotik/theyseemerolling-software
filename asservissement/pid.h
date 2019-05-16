@@ -16,9 +16,9 @@ typedef struct {
 
  double max_eps; // Capping the PID
 
- // Zone around "zero" where response is zero.
- double position_tolerance;
- double speed_tolerance;
+ // position reached
+ double position_tolerance;//in mm or rad depending on the pid type
+ double speed_tolerance;//in mm/s or rad/s
 
 } PID_Configuration;
 
@@ -28,8 +28,9 @@ typedef struct {
 
   double prev_eps;
   double integral;
+  double derivate;//robot speed if fix order in time
 } PID_Status;
 
 void pid_init(PID_Status *pid, PID_Configuration const* config);
 double pid(PID_Status *pid, double eps);
-bool reached(PID_Status *pid,double eps);
+bool reached(PID_Status *pid);

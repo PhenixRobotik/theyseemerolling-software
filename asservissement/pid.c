@@ -22,20 +22,23 @@ double pid(PID_Status *pid, double eps)
   eps = min(eps,  pid->conf->max_eps);
   eps = max(eps, -pid->conf->max_eps);
 
+	pid->derivate=(eps - pid->prev_eps) / pid->conf->Te;
+
   pid->integral += pid->conf->Te * eps;
   double output =
       pid->conf->Kp * eps
     + pid->conf->Ki * pid->integral
-    + pid->conf->Kd * (eps - pid->prev_eps) / pid->conf->Te;
+    + pid->conf->Kd * pid->derivate;
 
   pid->prev_eps = eps;
   return output;
 }
 
-bool reached(PID_Status *pid, double eps)
+bool reached(PID_Status *pid)
 {
 	return (
-		abs(eps) < pid->conf->position_tolerance
-		// && (abs(eps-pid->prev_eps) / (pid->Te<pid->speed_tolerance))
+		(abs(pid->prev_eps) < pid->conf->position_tolerance)
+		&&
+		(abs(pid->derivate)<pid->conf->speed_tolerance)
 	);
 }

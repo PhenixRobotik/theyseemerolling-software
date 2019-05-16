@@ -41,25 +41,40 @@ void asservissement() {
   odometry odom;
   odometry_get_position();
 
-  //set_theta_speed(&fsm_asser,1.57/5.0);
-  //set_theta(&fsm_asser,-1.57);
+  /*double angle=1.57;
+  set_theta_speed(&fsm_asser,1.57/5.0);
+  set_theta(&fsm_asser,angle);
+  angle*=-1;*/
 
-  set_translation_speed(&fsm_asser,40.0);
-  set_translation(&fsm_asser,-100.0);
+  double d=-700;
+  set_translation_speed(&fsm_asser,100.0);
+  set_translation(&fsm_asser,d);
+  d*=-1;
 
   while(1)
   {
     fsm->run(fsm);
     odom = odometry_get_position();
+    get_order(&fsm_asser, &sum_goal, &diff_goal);
 
     //print_odometry(&odom);
 
-    get_order(&fsm_asser, &sum_goal, &diff_goal);
+    if(reached(&pid_theta) && reached(&pid_delta) && fsm->run==FSM_NOP)//condition for command end
+    {
+      print_odometry(&odom);
 
-    /*echo_int(sum_goal);
-    echo("|");
-    echo_int(diff_goal);
-    echo("\n\r");*/
+      /*set_theta(&fsm_asser,angle);
+      angle*=-1;*/
+
+      set_translation(&fsm_asser,d);
+      d*=-1;
+
+      //led_set_status(1);
+    }
+    else
+    {
+      led_set_status(0);
+    }
 
     voltage_sum = pid(
       &pid_delta,
