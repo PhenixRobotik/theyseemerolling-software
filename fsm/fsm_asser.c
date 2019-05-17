@@ -65,11 +65,12 @@ void set_theta(FSM_asser *fsm_asser,double theta)//TODO: set the shortest angle,
 
 
 
-void set_X_Y_theta(FSM_asser *fsm_asser,double x,double y,double theta)
+void set_X_Y_theta(FSM_asser *fsm_asser,double x,double y,double theta,int back)
 {
   fsm_asser->X_goal=x;
   fsm_asser->Y_goal=y;
   fsm_asser->theta_goal=theta;
+  fsm_asser->back=back;
 
   fsm_asser->fsm_scheduler[0]=set_X_Y_theta_translation;
   fsm_asser->fsm_scheduler[1]=set_X_Y_theta_rotation;
@@ -78,6 +79,10 @@ void set_X_Y_theta(FSM_asser *fsm_asser,double x,double y,double theta)
 
   odometry odom=odometry_get_position();
   double trajectory_angle=atan2(y-odom.y,x-odom.x);
+  if(back==1)
+  {
+    trajectory_angle+=Pi;
+  }
   fsm_asser->angle=trajectory_angle-odom.theta;
   fsm_asser->angle=limit_angle(fsm_asser->angle);
 
@@ -97,6 +102,10 @@ void set_X_Y_theta_translation(FSM_asser *fsm_asser)
   double dx=fsm_asser->X_goal-odom.x;
   double dy=fsm_asser->Y_goal-odom.y;
   double t=sqrt(dx*dx+dy*dy);
+  if(fsm_asser->back==1)
+  {
+    t*=-1;
+  }
 
   fsm_asser->pos=t;
 

@@ -28,6 +28,7 @@ typedef struct FSM_asser_S{
   double X_goal;
   double Y_goal;
   double theta_goal;
+  int back;
 
   void *fsm_scheduler[10];
   int fsm_pointer;
@@ -41,7 +42,7 @@ void set_theta(FSM_asser *fsm_asser,double theta);//in rad relative angle
 void set_theta_speed(FSM_asser *fsm_asser,double vth);//in rad/s
 void set_translation(FSM_asser *fsm_asser,double t);//in mm
 void set_translation_speed(FSM_asser *fsm_asser,double vt);//in mm/s
-void set_X_Y_theta(FSM_asser *fsm_asser,double x,double y,double theta);//mm mm rad
+void set_X_Y_theta(FSM_asser *fsm_asser,double x,double y,double theta,int back);//mm, mm, rad, go backward
 
 void set_X_Y_theta_translation(FSM_asser *fsm_asser);//internal do not use
 void set_X_Y_theta_rotation(FSM_asser *fsm_asser);//internal do not use

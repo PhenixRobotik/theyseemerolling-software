@@ -51,7 +51,7 @@ void asservissement() {
   //set_translation(&fsm_asser,d);
   d*=-1;
 
-  set_X_Y_theta(&fsm_asser,20,-20,(-45-200)*Pi/180);
+  set_X_Y_theta(&fsm_asser,20,-20,(-45-200)*Pi/180,0);
 
   while(1)
   {
