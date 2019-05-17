@@ -56,11 +56,12 @@ int encoder_left_update(volatile int *prev_count)
   const int cnt = encoder_left_get_counter();
 
   int dl = cnt - *prev_count;
+  int limit = ENCODER_PERIOD/2;
   *prev_count = cnt;
-  if(dl > 1){
-    dl = -1;
-  }else if(dl < -1){
-    dl = +1;
+  if(dl > limit){
+    dl = dl-ENCODER_PERIOD;
+  }else if(dl < -limit){
+    dl = dl+ENCODER_PERIOD;
   }
   return dl;
 }

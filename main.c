@@ -46,8 +46,8 @@ void asservissement() {
   set_theta(&fsm_asser,angle);
   angle*=-1;*/
 
-  double d=-700;
-  set_translation_speed(&fsm_asser,100.0);
+  double d=-70;
+  set_translation_speed(&fsm_asser,20.0);
   set_translation(&fsm_asser,d);
   d*=-1;
 
