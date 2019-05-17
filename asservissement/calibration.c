@@ -25,7 +25,7 @@ set Kp to 0.6*Ku
 set Ki to Kp*2/Tu
 set Kd to Kp*Tu/8
 */
-const PID_Configuration PID_Configuration_delta = {//oscillation at Ku=0.1 period 1s
+const PID_Configuration PID_Configuration_sigma = {//oscillation at Ku=0.1 period 1s
   .Te = 0.01,
 
   .Kp = 0.01,

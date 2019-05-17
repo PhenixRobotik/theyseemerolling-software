@@ -30,12 +30,12 @@ void asservissement() {
         voltage_diff=0; // motor control variables
   double sum_goal=0, diff_goal=0;
 
-  PID_Status pid_delta, pid_theta;
-  pid_init(&pid_delta, &PID_Configuration_delta);
+  PID_Status pid_sigma, pid_theta;
+  pid_init(&pid_sigma, &PID_Configuration_sigma);
   pid_init(&pid_theta, &PID_Configuration_theta);
 
   FSM_asser fsm_asser;
-  init_FSM_asser(&fsm_asser);
+  init_FSM_asser(&fsm_asser,&pid_sigma,&pid_theta);
   FSM_Instance *fsm= (FSM_Instance*)&fsm_asser;//set the current fsm to fsm_asser
 
   odometry odom;
@@ -59,7 +59,7 @@ void asservissement() {
 
     //print_odometry(&odom);
 
-    if(reached(&pid_theta) && reached(&pid_delta) && fsm->run==FSM_NOP)//condition for command end
+    if(fsm->run==FSM_NOP)//condition for command end
     {
       print_odometry(&odom);
 
@@ -77,7 +77,7 @@ void asservissement() {
     }
 
     voltage_sum = pid(
-      &pid_delta,
+      &pid_sigma,
       sum_goal - 0.5 * (odom.left_total_distance + odom.right_total_distance)
     );
     voltage_diff = pid(
@@ -90,6 +90,6 @@ void asservissement() {
 
     motor_a_set(voltage_A);
     motor_b_set(voltage_B);
-    delay_ms(pid_delta.conf->Te);
+    delay_ms(pid_sigma.conf->Te);
   }
 }

@@ -16,5 +16,5 @@ extern const double Encoders_Theta_Per_Diff_r;
 #include "pid.h"
 
 extern const PID_Configuration
-  PID_Configuration_delta,
+  PID_Configuration_sigma,
   PID_Configuration_theta;

@@ -1,9 +1,11 @@
 #include "fsm_asser.h"
 
-void init_FSM_asser(FSM_asser *fsm_asser)//init the FSM in a stop state
+void init_FSM_asser(FSM_asser *fsm_asser,PID_Status *pid_sigma,PID_Status *pid_theta)//init the FSM in a stop state
 {
   FSM_Instance *fsm=&(fsm_asser->instance);
   fsm->status=FSM_SUCCESS;
+  fsm_asser->pid_sigma=pid_sigma;
+  fsm_asser->pid_theta=pid_theta;
   set_stop(fsm_asser);
 }
 
@@ -14,7 +16,7 @@ void set_stop(FSM_asser *fsm_asser)//stop the robot at the current position and 
   fsm_asser->diff_goal=odom.right_total_distance - odom.left_total_distance;
 
   FSM_Instance *fsm=&(fsm_asser->instance);//stop the fsm execution
-  FSM_NEXT(fsm,FSM_NOP,0);
+  FSM_NEXT(fsm,FSM_asser_wait_end,0);
 }
 
 
@@ -74,12 +76,12 @@ void FSM_asser_translation(FSM_Instance *fsm)
   if(fsm_asser->pos>0 && pos>fsm_asser->pos)
   {
     pos=fsm_asser->pos;
-    FSM_NEXT(fsm,FSM_NOP,0);//done
+    FSM_NEXT(fsm,FSM_asser_wait_end,0);//done
   }
   else if(fsm_asser->pos<0 && pos<fsm_asser->pos)
   {
     pos=fsm_asser->pos;
-    FSM_NEXT(fsm,FSM_NOP,0);//done
+    FSM_NEXT(fsm,FSM_asser_wait_end,0);//done
   }
   fsm_asser->sum_goal=pos+fsm_asser->initial_sum;
 }
@@ -98,12 +100,21 @@ void FSM_asser_angle(FSM_Instance *fsm)
   if(fsm_asser->angle>0 && angle>fsm_asser->angle)
   {
     angle=fsm_asser->angle;
-    FSM_NEXT(fsm,FSM_NOP,0);//done
+    FSM_NEXT(fsm,FSM_asser_wait_end,0);//done
   }
   else if(fsm_asser->angle<0 && angle<fsm_asser->angle)
   {
     angle=fsm_asser->angle;
-    FSM_NEXT(fsm,FSM_NOP,0);//done
+    FSM_NEXT(fsm,FSM_asser_wait_end,0);//done
   }
   fsm_asser->diff_goal=angle*Encoders_Axis_Distance+fsm_asser->initial_diff;
+}
+
+void FSM_asser_wait_end(FSM_Instance *fsm)
+{
+  FSM_asser *fsm_asser=(FSM_asser *) fsm;
+  if(reached(fsm_asser->pid_theta) && reached(fsm_asser->pid_sigma))
+  {
+    FSM_NEXT(fsm,FSM_NOP,0);
+  }
 }

@@ -4,6 +4,7 @@
 #include "../lowlevel/debug.h"
 #include "../asservissement/odometry.h"
 #include "../asservissement/calibration.h"
+#include "../asservissement/pid.h"
 
 typedef struct FSM_asser_S{
   FSM_Instance instance;
@@ -18,9 +19,11 @@ typedef struct FSM_asser_S{
 
   double sum_goal;
   double diff_goal;
+
+  PID_Status *pid_sigma, *pid_theta;
 }FSM_asser;
 
-void init_FSM_asser(FSM_asser *fsm_asser);
+void init_FSM_asser(FSM_asser *fsm_asser,PID_Status *pid_sigma,PID_Status *pid_theta);
 
 void set_stop(FSM_asser *fsm_asser);//stop the robot at the current position
 void set_theta(FSM_asser *fsm_asser,double theta);//in rad relative angle
@@ -33,3 +36,4 @@ void get_order(FSM_asser *fsm_asser,double *sum_goal,double *diff_goal);
 
 void FSM_asser_angle(FSM_Instance *fsm);
 void FSM_asser_translation(FSM_Instance *fsm);
+void FSM_asser_wait_end(FSM_Instance *fsm);
