@@ -42,16 +42,16 @@ void asservissement() {
   odometry_get_position();
 
   set_theta_speed(&fsm_asser,1.57/5.0);
-  /*double angle=1.57;
-  set_theta(&fsm_asser,angle);
-  angle*=-1;*/
+  double angle=1.57;
+  //set_theta(&fsm_asser,angle);
+  angle*=-1;
 
   set_translation_speed(&fsm_asser,10.0);
-  /*double d=-70;
-  set_translation(&fsm_asser,d);
-  d*=-1;*/
+  double d=-70;
+  //set_translation(&fsm_asser,d);
+  d*=-1;
 
-  set_X_Y_theta(&fsm_asser,10,-10,0);
+  set_X_Y_theta(&fsm_asser,20,-20,(-45-200)*Pi/180);
 
   while(1)
   {
@@ -59,13 +59,11 @@ void asservissement() {
     odom = odometry_get_position();
     get_order(&fsm_asser, &sum_goal, &diff_goal);
 
+    //print_odometry(&odom);
+    //delay_ms(1000);
     if(fsm->run==FSM_NOP)//condition for command end
     {
-      print_odometry(&odom);
-      while(1)
-      {
-
-      }
+      //print_odometry(&odom);
 
       //set_theta(&fsm_asser,angle);
       //angle*=-1;

@@ -1,12 +1,5 @@
 #include "fsm_asser.h"
 
-#ifndef max
-	#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
-#endif
-#ifndef min
-	#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
-#endif
-
 void init_FSM_asser(FSM_asser *fsm_asser,PID_Status *pid_sigma,PID_Status *pid_theta)//init the FSM in a stop state
 {
   FSM_Instance *fsm=&(fsm_asser->instance);
@@ -85,9 +78,8 @@ void set_X_Y_theta(FSM_asser *fsm_asser,double x,double y,double theta)
 
   odometry odom=odometry_get_position();
   double trajectory_angle=atan2(y-odom.y,x-odom.x);
-  fsm_asser->angle=-trajectory_angle+odom.theta;
-  //clamp the rotation angle between -Pi and -Pi
-  //in order to make the shortest rotation
+  fsm_asser->angle=trajectory_angle-odom.theta;
+  fsm_asser->angle=limit_angle(fsm_asser->angle);
 
 
   fsm_asser->initial_diff=fsm_asser->diff_goal;
@@ -118,9 +110,8 @@ void set_X_Y_theta_translation(FSM_asser *fsm_asser)
 void set_X_Y_theta_rotation(FSM_asser *fsm_asser)
 {
   odometry odom=odometry_get_position();
-  fsm_asser->angle=-fsm_asser->theta_goal+odom.theta;
-  //clamp the rotation angle between -Pi and -Pi
-  //in order to make the shortest rotation
+  fsm_asser->angle=fsm_asser->theta_goal-odom.theta;
+  fsm_asser->angle=limit_angle(fsm_asser->angle);
 
   fsm_asser->initial_diff=fsm_asser->diff_goal;
   fsm_asser->t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
@@ -202,4 +193,17 @@ void FSM_asser_wait_end(FSM_Instance *fsm)
       fsm_asser->fsm_pointer++;
     }
   }
+}
+
+double limit_angle(double angle)
+{
+  while(angle >Pi)
+  {
+    angle-=2*Pi;
+  }
+  while(angle <=-Pi)
+  {
+    angle+=2*Pi;
+  }
+  return angle;
 }

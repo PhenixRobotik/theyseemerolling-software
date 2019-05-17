@@ -51,3 +51,5 @@ void get_order(FSM_asser *fsm_asser,double *sum_goal,double *diff_goal);
 void FSM_asser_angle(FSM_Instance *fsm);
 void FSM_asser_translation(FSM_Instance *fsm);
 void FSM_asser_wait_end(FSM_Instance *fsm);
+
+double limit_angle(double angle);//returns an angle between -Pi and Pi

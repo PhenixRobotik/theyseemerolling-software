@@ -64,7 +64,7 @@ void timX_isr(void)
     // update the position
     odometry_internal.x += tmp_sigma * cos(odometry_internal.theta);
     odometry_internal.y += tmp_sigma * sin(odometry_internal.theta);
-    odometry_internal.theta += (Encoders_Theta_Per_Diff_l * dl_l- Encoders_Theta_Per_Diff_r * dl_r);
+    odometry_internal.theta += (-Encoders_Theta_Per_Diff_l * dl_l+ Encoders_Theta_Per_Diff_r * dl_r);
 
     //limit robot angle between -Pi and Pi
     if(odometry_internal.theta > Pi)
