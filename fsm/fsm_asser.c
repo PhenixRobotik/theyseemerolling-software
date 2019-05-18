@@ -36,7 +36,7 @@ void set_translation(FSM_asser *fsm_asser,double t)
 {
   fsm_asser->pos=t;
   fsm_asser->initial_sum=fsm_asser->sum_goal;
-  fsm_asser->t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
+  set_trapezoid(fsm_asser,t,fsm_asser->linear_speed);
   FSM_Instance *fsm=&(fsm_asser->instance);
   FSM_NEXT(fsm,FSM_asser_translation,0);
   fsm->status=FSM_RUNNING;
@@ -54,7 +54,7 @@ void set_theta(FSM_asser *fsm_asser,double theta)//TODO: set the shortest angle,
 {
   fsm_asser->angle=theta;
   fsm_asser->initial_diff=fsm_asser->diff_goal;
-  fsm_asser->t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
+  set_trapezoid(fsm_asser,theta,fsm_asser->angular_speed);
   FSM_Instance *fsm=&(fsm_asser->instance);
   FSM_NEXT(fsm,FSM_asser_angle,0);
   fsm->status=FSM_RUNNING;
@@ -88,7 +88,7 @@ void set_X_Y_theta(FSM_asser *fsm_asser,double x,double y,double theta,int back)
 
 
   fsm_asser->initial_diff=fsm_asser->diff_goal;
-  fsm_asser->t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
+  set_trapezoid(fsm_asser,fsm_asser->angle,fsm_asser->angular_speed);
   FSM_Instance *fsm=&(fsm_asser->instance);
   FSM_NEXT(fsm,FSM_asser_angle,0);
   fsm->status=FSM_RUNNING;
@@ -108,9 +108,8 @@ void set_X_Y_theta_translation(FSM_asser *fsm_asser)
   }
 
   fsm_asser->pos=t;
-
   fsm_asser->initial_sum=fsm_asser->sum_goal;
-  fsm_asser->t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
+  set_trapezoid(fsm_asser,t,fsm_asser->linear_speed);
   FSM_Instance *fsm=&(fsm_asser->instance);
   FSM_NEXT(fsm,FSM_asser_translation,0);
   fsm->status=FSM_RUNNING;
@@ -123,13 +122,54 @@ void set_X_Y_theta_rotation(FSM_asser *fsm_asser)
   fsm_asser->angle=limit_angle(fsm_asser->angle);
 
   fsm_asser->initial_diff=fsm_asser->diff_goal;
-  fsm_asser->t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
+  set_trapezoid(fsm_asser,fsm_asser->angle,fsm_asser->angular_speed);
+
   FSM_Instance *fsm=&(fsm_asser->instance);
   FSM_NEXT(fsm,FSM_asser_angle,0);
   fsm->status=FSM_RUNNING;
 }
 
+void set_trapezoid(FSM_asser *fsm_asser,double goal, double speed)
+{
+  fsm_asser->goal=goal;
+  speed=fabs(speed);
+  if(goal<0.0)
+  {
+    speed *= -1;
+  }
+  fsm_asser->speed=speed;
 
+  fsm_asser->t0 = SYSTICK_TO_MILLIS(get_systicks())/1000.0;
+  fsm_asser->t3 = goal/(speed*(1-0.5*X1-0.5*X2));//total time of ramp generation
+  fsm_asser->t1 = X1*fsm_asser->t3;
+  fsm_asser->t2 = (1-X2)*fsm_asser->t3;
+
+  fsm_asser->a1 = speed/fsm_asser->t1;
+  fsm_asser->a2 = speed/(fsm_asser->t3-fsm_asser->t2);
+
+  fsm_asser->x1 = 0.5*fsm_asser->a1*fsm_asser->t1*fsm_asser->t1;
+  fsm_asser->x2 = speed*(fsm_asser->t2-fsm_asser->t1)+fsm_asser->x1;
+}
+
+double get_trapezoid(FSM_asser *fsm_asser)
+{
+  double t = (SYSTICK_TO_MILLIS(get_systicks())/1000.0)-fsm_asser->t0,dt;
+
+  if(t<fsm_asser->t1)
+  {
+    return 0.5*fsm_asser->a1*t*t;
+  }
+  else if(t<fsm_asser->t2)
+  {
+    return fsm_asser->speed*(t-fsm_asser->t1)+fsm_asser->x1;
+  }
+  else if (t<=fsm_asser->t3)
+  {
+    dt=t-fsm_asser->t2;
+    return -0.5*fsm_asser->a2*dt*dt+fsm_asser->speed*dt+fsm_asser->x2;
+  }
+  return fsm_asser->goal;
+}
 
 void get_order(FSM_asser *fsm_asser,double *sum_goal,double *diff_goal)//just return the orders
 {
@@ -142,23 +182,15 @@ void get_order(FSM_asser *fsm_asser,double *sum_goal,double *diff_goal)//just re
 void FSM_asser_translation(FSM_Instance *fsm)
 {
   FSM_asser *fsm_asser=(FSM_asser *) fsm;
-  double t=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
-  double pos=(t-fsm_asser->t0)*fsm_asser->linear_speed;
-  if(fsm_asser->pos<0)
+
+  double pos=get_trapezoid(fsm_asser);
+
+  if(fabs(pos)>=fabs(fsm_asser->pos))
   {
-    pos=-pos;
+    pos=fsm_asser->pos;
+    FSM_NEXT(fsm,FSM_asser_wait_end,0);//done
   }
 
-  if(fsm_asser->pos>0 && pos>fsm_asser->pos)
-  {
-    pos=fsm_asser->pos;
-    FSM_NEXT(fsm,FSM_asser_wait_end,0);//done
-  }
-  else if(fsm_asser->pos<0 && pos<fsm_asser->pos)
-  {
-    pos=fsm_asser->pos;
-    FSM_NEXT(fsm,FSM_asser_wait_end,0);//done
-  }
   fsm_asser->sum_goal=pos+fsm_asser->initial_sum;
 }
 
@@ -166,19 +198,10 @@ void FSM_asser_translation(FSM_Instance *fsm)
 void FSM_asser_angle(FSM_Instance *fsm)
 {
   FSM_asser *fsm_asser=(FSM_asser *) fsm;
-  double t=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
-  double angle=(t-fsm_asser->t0)*fsm_asser->angular_speed;
-  if(fsm_asser->angle<0)
-  {
-    angle=-angle;
-  }
 
-  if(fsm_asser->angle>0 && angle>fsm_asser->angle)
-  {
-    angle=fsm_asser->angle;
-    FSM_NEXT(fsm,FSM_asser_wait_end,0);//done
-  }
-  else if(fsm_asser->angle<0 && angle<fsm_asser->angle)
+  double angle = get_trapezoid(fsm_asser);
+
+  if(fabs(angle)>=fabs(fsm_asser->angle))
   {
     angle=fsm_asser->angle;
     FSM_NEXT(fsm,FSM_asser_wait_end,0);//done

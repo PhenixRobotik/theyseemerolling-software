@@ -8,6 +8,11 @@
 
 #include <math.h>
 
+//trapezoid form factors, X1+X2<=1
+//classic setup X1=0.3 X2=0.3
+#define X1 0.3
+#define X2 0.3
+
 typedef struct FSM_asser_S{
   FSM_Instance instance;
   double angle;//in rad
@@ -30,7 +35,9 @@ typedef struct FSM_asser_S{
   int back;
 
   //internal variables for trapezoid generation
+  double goal,speed;
   double t0,t1,t2,t3;
+  double a1,a2;
   double x1,x2;
 
   void *fsm_scheduler[10];
@@ -49,6 +56,9 @@ void set_X_Y_theta(FSM_asser *fsm_asser,double x,double y,double theta,int back)
 
 void set_X_Y_theta_translation(FSM_asser *fsm_asser);//internal do not use
 void set_X_Y_theta_rotation(FSM_asser *fsm_asser);//internal do not use
+
+void set_trapezoid(FSM_asser *fsm_asser,double goal, double speed);//internal do not use, setup the trapezoid parameters
+double get_trapezoid(FSM_asser *fsm_asser);//internal do not use, for trapezoid generation
 
 void get_order(FSM_asser *fsm_asser,double *sum_goal,double *diff_goal);
 
