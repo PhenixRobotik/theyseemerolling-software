@@ -46,18 +46,19 @@ void asservissement() {
   //set_theta(&fsm_asser,angle);
   angle*=-1;
 
-  set_translation_speed(&fsm_asser,10.0);
-  double d=-70;
+  //set_translation_speed(&fsm_asser,10.0);
+  double d=-100;
   //set_translation(&fsm_asser,d);
   d*=-1;
 
-  set_X_Y_theta(&fsm_asser,20,-20,(-45-200)*Pi/180,0);
+  set_X_Y_theta(&fsm_asser,20,-20,(-45-200)*Pi/180,1);
 
   while(1)
   {
     fsm->run(fsm);
     odom = odometry_get_position();
     get_order(&fsm_asser, &sum_goal, &diff_goal);
+    double t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0,t1;
 
     //print_odometry(&odom);
     //delay_ms(1000);
@@ -66,10 +67,10 @@ void asservissement() {
       //print_odometry(&odom);
 
       //set_theta(&fsm_asser,angle);
-      //angle*=-1;
+      angle*=-1;
 
       //set_translation(&fsm_asser,d);
-      //d*=-1;
+      d*=-1;
 
       //led_set_status(1);
     }
@@ -92,6 +93,12 @@ void asservissement() {
 
     motor_a_set(voltage_A);
     motor_b_set(voltage_B);
-    delay_ms(pid_sigma.conf->Te);
+
+    do{
+      t1=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
+    }while(t1-t0<pid_sigma.conf->Te);
+
+    t0=t1;
+
   }
 }

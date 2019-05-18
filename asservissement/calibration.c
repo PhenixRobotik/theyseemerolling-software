@@ -25,24 +25,24 @@ set Kp to 0.6*Ku
 set Ki to Kp*2/Tu
 set Kd to Kp*Tu/8
 */
-const PID_Configuration PID_Configuration_sigma = {//oscillation at Ku=0.1 period 1s
-  .Te = 0.01,
+const PID_Configuration PID_Configuration_sigma = {//oscillation at Ku=0.05 period 0.25s
+  .Te = 0.01,//in seconds
 
-  .Kp = 0.01,
-  .Ki = 0.0001,
-  .Kd = 0.004,
+  .Kp = 0.05*0.6,
+  .Ki = 0.05*0.6*2/0.25,
+  .Kd = 0.05*0.6*0.25/8,
 
   .max_eps = 100000000,
   .position_tolerance = 3,//in mm
   .speed_tolerance = 1 //in mm/s
 };
 
-const PID_Configuration PID_Configuration_theta = {//oscillation at Ku=1 period 0.1s
+const PID_Configuration PID_Configuration_theta = {//oscillation at Ku=0.05 period 0.25s
   .Te = 0.01,
 
-  .Kp = 0.01,
-  .Ki = 0.0002,
-  .Kd = 0.004,
+  .Kp = 0.05*0.6,
+  .Ki = 0.05*0.6*2/0.25,
+  .Kd = 0.05*0.6*0.25/8,
 
   .max_eps = 350,
   .position_tolerance = 1.0*Pi/180.0,//in rad
