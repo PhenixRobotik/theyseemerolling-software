@@ -45,6 +45,6 @@ const PID_Configuration PID_Configuration_theta = {//oscillation at Ku=0.05 peri
   .Kd = 0.05*0.6*0.25/8,
 
   .max_eps = 350,
-  .position_tolerance = 1.0*Pi/180.0,//in rad
-  .speed_tolerance = 0.5*Pi/180 //in rad/s
+  .position_tolerance =  Encoders_Axis_Distance*1.0*Pi/180.0,//in rad
+  .speed_tolerance =  Encoders_Axis_Distance*0.5*Pi/180 //in rad/s
 };

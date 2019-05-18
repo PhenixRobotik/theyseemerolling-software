@@ -43,30 +43,30 @@ void asservissement() {
 
   set_theta_speed(&fsm_asser,1.57/5.0);
   double angle=1.57;
-  //set_theta(&fsm_asser,angle);
+  set_theta(&fsm_asser,angle);
   angle*=-1;
 
-  //set_translation_speed(&fsm_asser,10.0);
-  double d=-100;
+  set_translation_speed(&fsm_asser,10.0);
+  double d=-10;
   //set_translation(&fsm_asser,d);
   d*=-1;
 
-  set_X_Y_theta(&fsm_asser,20,-20,(-45-200)*Pi/180,1);
+  //set_X_Y_theta(&fsm_asser,20,-20,(-45-200)*Pi/180,1);
 
+  double t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0,t1;
   while(1)
   {
     fsm->run(fsm);
     odom = odometry_get_position();
     get_order(&fsm_asser, &sum_goal, &diff_goal);
-    double t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0,t1;
 
     //print_odometry(&odom);
     //delay_ms(1000);
     if(fsm->run==FSM_NOP)//condition for command end
     {
-      //print_odometry(&odom);
+      print_odometry(&odom);
 
-      //set_theta(&fsm_asser,angle);
+      set_theta(&fsm_asser,angle);
       angle*=-1;
 
       //set_translation(&fsm_asser,d);
@@ -97,7 +97,6 @@ void asservissement() {
     do{
       t1=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
     }while(t1-t0<pid_sigma.conf->Te);
-
     t0=t1;
 
   }

@@ -17,7 +17,6 @@ typedef struct FSM_asser_S{
 
   double initial_sum;
   double initial_diff;
-  uint32_t t0;
 
   double sum_goal;
   double diff_goal;
@@ -29,6 +28,10 @@ typedef struct FSM_asser_S{
   double Y_goal;
   double theta_goal;
   int back;
+
+  //internal variables for trapezoid generation
+  double t0,t1,t2,t3;
+  double x1,x2;
 
   void *fsm_scheduler[10];
   int fsm_pointer;

@@ -37,8 +37,8 @@ double pid(PID_Status *pid, double eps)
 bool reached(PID_Status *pid)
 {
 	return (
-		(abs(pid->prev_eps) < pid->conf->position_tolerance)
+		(fabs(pid->prev_eps) < pid->conf->position_tolerance)
 		&&
-		(abs(pid->derivate)<pid->conf->speed_tolerance)
+		(fabs(pid->derivate)<pid->conf->speed_tolerance)
 	);
 }
