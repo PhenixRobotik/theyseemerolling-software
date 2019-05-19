@@ -1,6 +1,11 @@
-#include "debug.h"
+#include "uart.h"
 
-void debug_setup()
+#include <libopencm3/stm32/usart.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/rcc.h>
+
+
+void uart_setup()
 {
   // Open GPIO for USART
   rcc_periph_clock_enable(DEBUG_PORT_TX_RCC);
@@ -25,14 +30,14 @@ void debug_setup()
   usart_enable(DEBUG_USART);
 }
 
-void echo(char *chain)
+void uart_send_string(char* chain)
 {
-  int i, n=0;
-  while(chain[n]!='\0') n++;
-  for(i=0;i<n;i++) usart_send_blocking(DEBUG_USART, chain[i]);
+  for (int i = 0; chain[i] != 0; i++) {
+    usart_send_blocking(DEBUG_USART, chain[i]);
+  }
 }
 
-void echo_int(int integer)
+void uart_send_int(int integer)
 {
 	int i=0,po=0,integer_tmp=integer;
 	char chain[256],*chain_tmp;
@@ -59,6 +64,6 @@ void echo_int(int integer)
 		integer=integer/10;
 	}while(integer!=0);
 
-	chain_tmp[i]='\0';//end of number line
-	echo(chain);//finally prints the number
+	chain_tmp[i]='\0'; // end of number line
+	uart_send_string(chain); // finally prints the number
 }

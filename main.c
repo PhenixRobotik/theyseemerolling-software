@@ -1,6 +1,6 @@
 #include "lowlevel/theyseemerolling.h"
 #include "lowlevel/clock.h"
-#include "lowlevel/debug.h"
+#include "lowlevel/uart.h"
 #include "lowlevel/motors.h"
 
 #include "fsm/fsm_asser.h"
@@ -13,7 +13,7 @@ void asservissement();
 int main() {
   clock_setup();
   gpio_setup();
-  debug_setup();
+  uart_setup();
   motors_setup();
   odometry_setup();
 

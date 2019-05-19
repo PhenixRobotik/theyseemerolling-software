@@ -2,7 +2,7 @@
 #include "calibration.h"
 
 #include "lowlevel/encoders.h"
-#include "lowlevel/debug.h"
+#include "lowlevel/uart.h"
 
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/rcc.h>
@@ -87,20 +87,20 @@ odometry odometry_get_position()
 
 
 void print_odometry(odometry *odom) {
-  echo("\r\n");
-  echo("\r\nl=");
-  echo_int((int)odom->left_count);
-	echo(" ");
-	echo_int((int)odom->left_total_distance);
-  echo("\t; r=");
-  echo_int((int)odom->right_count);
-	echo(" ");
-	echo_int((int)odom->right_total_distance);
+  uart_send_string("\r\n");
+  uart_send_string("\r\nl=");
+  uart_send_int		((int)odom->left_count);
+	uart_send_string(" ");
+	uart_send_int		((int)odom->left_total_distance);
+  uart_send_string("\t; r=");
+  uart_send_int		((int)odom->right_count);
+	uart_send_string(" ");
+	uart_send_int		((int)odom->right_total_distance);
 
-  echo("\r\nx=");
-  echo_int((int)odom->x);
-  echo("\t; y=");
-  echo_int((int)odom->y);
-  echo("\t; theta=");
-  echo_int((int)(odom->theta*180.0/Pi));
+  uart_send_string("\r\nx=");
+  uart_send_int		((int)odom->x);
+  uart_send_string("\t; y=");
+  uart_send_int		((int)odom->y);
+  uart_send_string("\t; theta=");
+  uart_send_int		((int)(odom->theta*180.0/Pi));
 }

@@ -4,7 +4,7 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/timer.h>
 
-#include "../lowlevel/clock.h"
+#include "lowlevel/clock.h"
 
 typedef enum FSM_Status_E{
   FSM_RUNNING,

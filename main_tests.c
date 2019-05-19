@@ -2,8 +2,8 @@
 #include "lowlevel/clock.h"
 #include "lowlevel/eeprom.h"
 #include "lowlevel/motors.h"
+#include "lowlevel/uart.h"
 
-#include "lowlevel/debug.h"
 
 #include "asservissement/odometry.h"
 
@@ -18,7 +18,7 @@ int main() {
   // Basic initialization
   clock_setup();
   gpio_setup();
-  debug_setup();
+  uart_setup();
 
   odometry_setup();
 
@@ -41,7 +41,7 @@ void led_blink() {
 
 void uart_send() {
   while(true) {
-    echo("hello world (sure ?)\n\r");
+    uart_send_string("hello world (sure ?)\n\r");
     led_toggle_status();
     delay_ms(300);
   }
@@ -102,11 +102,11 @@ void test_encoders() {
   {
     odom = odometry_get_position();
 
-    echo_int(odom.left_count);
-    echo(" ; ");
+    uart_send_int(odom.left_count);
+    uart_send_string(" ; ");
 
-    echo_int(odom.right_count);
-    echo("\n\r");
+    uart_send_int(odom.right_count);
+    uart_send_string("\n\r");
 
     delay_ms(100);
   }
@@ -133,22 +133,22 @@ void test_direction_general() {
     odom_new = odometry_get_position();
 
     if (odom_new.left_count > odom_old.left_count)
-      echo(" + ");
+      uart_send_string(" + ");
     else if (odom_new.left_count < odom_old.left_count)
-      echo(" - ");
+      uart_send_string(" - ");
     else
-      echo(" 0 ");
+      uart_send_string(" 0 ");
 
-    echo(";");
+    uart_send_string(";");
 
     if (odom_new.right_count > odom_old.right_count)
-      echo(" + ");
+      uart_send_string(" + ");
     else if (odom_new.right_count < odom_old.right_count)
-      echo(" - ");
+      uart_send_string(" - ");
     else
-      echo(" 0 ");
+      uart_send_string(" 0 ");
 
-    echo("\n\r");
+    uart_send_string("\n\r");
 
     delay_ms(300);
   }
@@ -162,18 +162,18 @@ void test_odometry() {
   {
     odom = odometry_get_position();
 
-    echo("\r\n");
-    echo("\r\nl=");
-    echo_int((int)odom.left_count);
-    echo("\t; r=");
-    echo_int((int)odom.right_count);
+    uart_send_string("\r\n");
+    uart_send_string("\r\nl=");
+    uart_send_int((int)odom.left_count);
+    uart_send_string("\t; r=");
+    uart_send_int((int)odom.right_count);
 
-    echo("\r\nx=");
-    echo_int((int)odom.x);
-    echo("\t; y=");
-    echo_int((int)odom.y);
-    echo("\t; theta=");
-    echo_int((int)(odom.theta*100));
+    uart_send_string("\r\nx=");
+    uart_send_int((int)odom.x);
+    uart_send_string("\t; y=");
+    uart_send_int((int)odom.y);
+    uart_send_string("\t; theta=");
+    uart_send_int((int)(odom.theta*100));
 
     delay_ms(300);
   }

@@ -35,6 +35,12 @@ system_libraries = [
 ]
 
 
+add_project_arguments([
+    '-Werror=implicit-function-declaration',
+  ],
+  language: [ 'c', 'cpp' ],
+)
+
 ###############################################################################
 # Libopencm3
 
@@ -90,11 +96,11 @@ lowlevel = static_library('lowlevel',
   'lowlevel/adc.c',
   'lowlevel/can.c',
   'lowlevel/clock.c',
-  'lowlevel/debug.c',
   'lowlevel/eeprom.c',
   'lowlevel/encoders.c',
   'lowlevel/gpio.c',
   'lowlevel/motors.c',
+  'lowlevel/uart.c',
   dependencies: libopencm3,
   pic: false,
 )
@@ -119,7 +125,7 @@ finite_state_machine = static_library('fsm',
 
 can_support = static_library('can_bus',
   'libcanard/canard.c',
-
+  # 'can_bus/can_bus.c',
   include_directories: 'libcanard'
 )
 

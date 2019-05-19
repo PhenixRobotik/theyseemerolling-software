@@ -1,14 +1,10 @@
 #pragma once
 
-#include <libopencm3/stm32/usart.h>
-#include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/rcc.h>
-
 /***************************************
 simple uart configuration for debugging
 ***************************************/
 
-//DEFINES FOR DEBUG_UART
+// DEFINES FOR DEBUG_UART
 #define DEBUG_RCC_USART RCC_USART1
 #define DEBUG_USART USART1
 #define DEBUG_UART_SPEED (9600*2)
@@ -24,8 +20,8 @@ simple uart configuration for debugging
 #define DEBUG_PIN_RX GPIO7
 #define DEBUG_AF_RX GPIO_AF7
 
-void debug_setup(void);
-void echo(char *chain);
-void echo_int(int integer);
+void uart_setup();
+void uart_send_string(char* chain); // NULL-ended string
+void uart_send_int(int integer);
 
 //rec=usart_recv_blocking(DEBUG_USART);//to receive a byte

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "fsm_master.h"
-#include "../lowlevel/debug.h"
-#include "../asservissement/odometry.h"
-#include "../asservissement/calibration.h"
-#include "../asservissement/pid.h"
+#include "lowlevel/uart.h"
+#include "asservissement/odometry.h"
+#include "asservissement/calibration.h"
+#include "asservissement/pid.h"
 
 #include <math.h>
 
