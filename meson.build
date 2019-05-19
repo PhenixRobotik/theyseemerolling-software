@@ -103,13 +103,13 @@ asservissement = static_library('asservissement',
   'asservissement/calibration.c',
   'asservissement/odometry.c',
   'asservissement/pid.c',
-  'asservissement/fsm_asser.c',
   dependencies: libopencm3,
   pic: false,
 )
 
 finite_state_machine = static_library('fsm',
   'fsm/fsm_master.c',
+  'fsm/fsm_asser.c',
   dependencies: libopencm3,
   pic: false,
 )
