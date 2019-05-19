@@ -1,8 +1,8 @@
 project('theyseemerolling',
   'c', 'cpp',
   default_options: [
+    'buildtype=plain',
     'b_lto=false',
-    'b_asneeded=false',
     'warning_level=3',
     'c_std=gnu11',
     'cpp_std=gnu++17',
@@ -25,13 +25,25 @@ objcopy = meson.get_cross_property('objcopy')
 size    = meson.get_cross_property('size')
 openocd = meson.get_cross_property('openocd')
 
+system_libraries = [
+  cc.find_library('nosys'),
+  cc.find_library('stdc++_nano'),
+  cc.find_library('m'),
+  cc.find_library('c'),
+  cc.find_library('g'),
+  cc.find_library('rdimon'),
+]
+
+
 ###############################################################################
 # Libopencm3
 
 libopencm3_dir = 'hal_common/libopencm3'
 
 run_target('libopencm3',
-  command: [ 'make', '-C', libopencm3_dir, '-j', ]
+  command: [ 'make', '-C', libopencm3_dir,
+    '-j', 'lib/stm32/f3',
+  ],
 )
 
 libopencm3_include = include_directories(libopencm3_dir / 'include')
@@ -84,6 +96,7 @@ lowlevel = static_library('lowlevel',
   'lowlevel/gpio.c',
   'lowlevel/motors.c',
   dependencies: libopencm3,
+  pic: false,
 )
 
 asservissement = static_library('asservissement',
@@ -92,11 +105,13 @@ asservissement = static_library('asservissement',
   'asservissement/pid.c',
   'asservissement/fsm_asser.c',
   dependencies: libopencm3,
+  pic: false,
 )
 
 finite_state_machine = static_library('fsm',
   'fsm/fsm_master.c',
   dependencies: libopencm3,
+  pic: false,
 )
 
 #############################
@@ -121,7 +136,10 @@ executables += executable('tsmr.elf',
     asservissement,
     finite_state_machine,
   ],
-  dependencies: libopencm3,
+  dependencies: [
+    system_libraries,
+    libopencm3,
+  ],
   link_args: linker_script_link,
 )
 
@@ -132,7 +150,10 @@ executables += executable('tsmr_tests.elf',
     asservissement,
     finite_state_machine,
   ],
-  dependencies: libopencm3,
+  dependencies: [
+    system_libraries,
+    libopencm3,
+  ],
   link_args: linker_script_link,
 )
 
@@ -171,6 +192,7 @@ foreach exe : executables
     input : hex,
     output: '@0@.flash'.format(exe_name),
     depends: hex,
+    console: true,
     command: [
       openocd, '-f', openocd_config,
       '-c', 'init',
