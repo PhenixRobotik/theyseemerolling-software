@@ -173,7 +173,7 @@ clean_meson:
 	rm -rf _build
 
 flash: build
-	ninja -C _build ups.flash
+	ninja -C _build tsmr.flash
 
 flash_tests: build
-	ninja -C _build ups_tests.flash
+	ninja -C _build tsmr_tests.flash
