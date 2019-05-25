@@ -4,6 +4,10 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 
+#include <stdarg.h>
+#include <string.h>
+#include <stdio.h>
+
 
 void uart_setup()
 {
@@ -37,33 +41,58 @@ void uart_send_string(char* chain)
   }
 }
 
+
+void uart_send_string_formatted_v(const char *fmt, va_list argp)
+{
+    char string[80];
+    if (vsprintf(string, fmt, argp) <= 0)
+      return;
+
+    uart_send_string(string);
+}
+
+void uart_send_string_formatted(const char *fmt, ...) {
+  va_list argp;
+  va_start(argp, fmt);
+  uart_send_string_formatted_v(fmt, argp);
+  va_end(argp);
+}
+
 void uart_send_int(int integer)
 {
-	int i=0,po=0,integer_tmp=integer;
-	char chain[256],*chain_tmp;
+	int i = 0,
+      total_digits = 0,
+      integer_tmp = integer;
+	char chain[256], *chain_tmp;
 
-	if(integer<0)//add - before if negative number
+  // add - before if negative number
+	if(integer < 0)
 	{
-		chain[0]='-';
-		chain_tmp=&chain[1];
-		integer=-integer;//absolute value
+		chain[0] = '-';
+		chain_tmp = &chain[1];
+    // absolute value
+		integer = -integer;
 	}
 	else
 	{
-		chain_tmp=chain;
+		chain_tmp = chain;
 	}
-	//the power of ten of the number
+
+	// the power of ten of the number
 	do{
-		integer_tmp/=10;
-		po++;
-	}while(integer_tmp!=0);
+		integer_tmp /= 10;
+		total_digits++;
+	} while(integer_tmp != 0);
 
-	do{//converting the integer to caracters
-		chain_tmp[po-i-1]=(integer%10)+'0';
+  // converting the integer to caracters
+	do{
+		chain_tmp[total_digits - i - 1] = (integer % 10) + '0';
 		i++;
-		integer=integer/10;
-	}while(integer!=0);
+		integer /= 10;
+	} while(integer != 0);
 
-	chain_tmp[i]='\0'; // end of number line
-	uart_send_string(chain); // finally prints the number
+  // end of number line
+	chain_tmp[i]='\0';
+  // finally prints the number
+	uart_send_string(chain);
 }

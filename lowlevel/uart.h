@@ -24,4 +24,7 @@ void uart_setup();
 void uart_send_string(char* chain); // NULL-ended string
 void uart_send_int(int integer);
 
+// Warning : hard-limit on string length to 80 chars
+void uart_send_string_formatted(const char *fmt, ...);
+
 //rec=usart_recv_blocking(DEBUG_USART);//to receive a byte

@@ -13,6 +13,7 @@ void led_blink();
 void test_encoders();
 void test_direction_general();
 void test_odometry();
+void test_uart_send();
 
 int main() {
   // Basic initialization
@@ -23,7 +24,7 @@ int main() {
   odometry_setup();
 
   // motors_setup();
-
+  test_uart_send();
   test_odometry();
 
   return 0;
@@ -39,7 +40,7 @@ void led_blink() {
   }
 }
 
-void uart_send() {
+void test_uart_send() {
   while(true) {
     uart_send_string("hello world (sure ?)\n\r");
     led_toggle_status();
