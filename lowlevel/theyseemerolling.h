@@ -16,10 +16,10 @@ bool about_da_power();
 void set_all_1();
 
 /*****************************************************************************/
-void can_setup();
-// TODO !
-void* can_get_message();
-void can_send(void* msg);
+//void can_setup();
+// TODO ! non mdr
+//void* can_get_message();
+//void can_send(void* msg);
 
 /*****************************************************************************/
 void adcs_setup();

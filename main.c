@@ -3,22 +3,41 @@
 #include "lowlevel/uart.h"
 #include "lowlevel/motors.h"
 
+#include "can/can.h"
+#include "can/link_can.h"
+
 #include "fsm/fsm_asser.h"
 #include "asservissement/odometry.h"
 #include "asservissement/pid.h"
 #include "asservissement/calibration.h"
 
+#include <libopencm3/stm32/can.h>
+
 void asservissement();
+
+void hard_fault_handler() {
+  return; //mdr
+  //while(1);
+}
 
 int main() {
   clock_setup();
-  gpio_setup();
-  uart_setup();
-  motors_setup();
-  odometry_setup();
+  gpio_setup();  
+  //uart_setup();
+  can_setup();
+  setup_com(); //mdr
+  //motors_setup();
+  //odometry_setup();
 
-  asservissement();
+  // Pour commencer dans de bonnes conditions
+  hard_fault_handler();
 
+  uint8_t data[3] = {1, 1, 0};
+  can_transmit(CAN1, 2, false, false, 3, &data);
+  //  asservissement();
+
+  // TODO : priorités interruptions
+  
   while (1) {};
   return 0;
 }

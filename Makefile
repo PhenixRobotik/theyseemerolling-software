@@ -86,9 +86,8 @@ all: tsmr.hex
 
 tsmr.elf: \
 		lowlevel/adc.c.o \
-		lowlevel/can.c.o \
 		lowlevel/clock.c.o \
-		lowlevel/debug.c.o \
+		lowlevel/uart.c.o \
 		lowlevel/eeprom.c.o \
 		lowlevel/encoders.c.o \
 		lowlevel/gpio.c.o \
@@ -98,6 +97,11 @@ tsmr.elf: \
 		asservissement/calibration.c.o \
 		asservissement/odometry.c.o \
 		asservissement/pid.c.o \
+		can/link_can.c.o \
+		can/rc_server.c.o \
+		can/remote_call.c.o \
+		can/robotronik_protocol.c.o \
+		can/can.c.o \
 		main.c.o \
 		|
 	$(CC) $(CFlags) $^ $(LFlags) -o $@
@@ -108,7 +112,7 @@ tests.elf: \
 		lowlevel/adc.c.o \
 		lowlevel/can.c.o \
 		lowlevel/clock.c.o \
-		lowlevel/debug.c.o \
+		lowlevel/uart.c.o \
 		lowlevel/eeprom.c.o \
 		lowlevel/encoders.c.o \
 		lowlevel/gpio.c.o \
@@ -162,18 +166,7 @@ clean:
 		-o -name "*.elf" \
 		\) -delete
 
-
-build: | _build
-	ninja -C _build
-
-_build:
-	meson _build --cross-file stm32f303.meson
-
-clean_meson:
-	rm -rf _build
-
-flash: build
-	ninja -C _build tsmr.flash
-
-flash_tests: build
-	ninja -C _build tsmr_tests.flash
+distf: tsmr.elf
+	arm-none-eabi-gdb -ex="target remote 192.168.4.1:3333" -ex "load tsmr.elf" -ex "monitor reset" -ex "set confirm off" -ex "quit"
+distgdb: tsmr.elf
+	arm-none-eabi-gdb -ex="target remote 192.168.4.1:3333"  -ex "monitor reset halt" -ex "set confirm off" tsmr.elf
