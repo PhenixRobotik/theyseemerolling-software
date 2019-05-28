@@ -170,3 +170,5 @@ distf: tsmr.elf
 	arm-none-eabi-gdb -ex="target remote 192.168.4.1:3333" -ex "load tsmr.elf" -ex "monitor reset" -ex "set confirm off" -ex "quit"
 distgdb: tsmr.elf
 	arm-none-eabi-gdb -ex="target remote 192.168.4.1:3333"  -ex "monitor reset halt" -ex "set confirm off" tsmr.elf
+distreset:
+	arm-none-eabi-gdb -ex="target remote 192.168.4.1:3333" -ex "monitor reset" -ex "set confirm off" -ex "quit"

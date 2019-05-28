@@ -43,7 +43,16 @@ void odometry_setup()
 
   //start pooling
   nvic_enable_irq(ODOM_NVIC_TIM_IRQ);
-	timer_enable_irq(ODOM_TIM, TIM_DIER_CC1IE);
+  nvic_set_priority(ODOM_NVIC_TIM_IRQ, 1);
+  timer_enable_irq(ODOM_TIM, TIM_DIER_CC1IE);
+}
+
+void reset_odometry(){
+  nvic_disable_irq(ODOM_NVIC_TIM_IRQ);
+  odometry_internal.x=0;//init the odometry structure
+  odometry_internal.y=0;
+  odometry_internal.theta=0;
+  nvic_enable_irq(ODOM_NVIC_TIM_IRQ);
 }
 
 void timX_isr(void)

@@ -12,6 +12,7 @@
 #include "asservissement/calibration.h"
 
 #include <libopencm3/stm32/can.h>
+#include <stdbool.h>
 
 void asservissement();
 
@@ -20,28 +21,31 @@ void hard_fault_handler() {
   //while(1);
 }
 
+volatile bool enable = 0;
 int main() {
   clock_setup();
   gpio_setup();  
-  //uart_setup();
+  uart_setup();
   can_setup();
   setup_com(); //mdr
-  //motors_setup();
-  //odometry_setup();
+  motors_setup();
+  odometry_setup();
 
   // Pour commencer dans de bonnes conditions
   hard_fault_handler();
 
-  uint8_t data[3] = {1, 1, 0};
-  can_transmit(CAN1, 2, false, false, 3, &data);
-  //  asservissement();
-
+  do{
+    while(!enable);
+    asservissement();
+  }while(true != false);
+    
   // TODO : priorités interruptions
   
   while (1) {};
   return 0;
 }
 
+FSM_asser fsm_asser;
 void asservissement() {
   double voltage_A=0,
         voltage_B=0,
@@ -53,50 +57,19 @@ void asservissement() {
   pid_init(&pid_sigma, &PID_Configuration_sigma);
   pid_init(&pid_theta, &PID_Configuration_theta);
 
-  FSM_asser fsm_asser;
+  //FSM_asser fsm_asser;
   init_FSM_asser(&fsm_asser,&pid_sigma,&pid_theta);
   FSM_Instance *fsm= (FSM_Instance*)&fsm_asser;//set the current fsm to fsm_asser
 
   odometry odom;
-  odometry_get_position();
-
-  set_theta_speed(&fsm_asser,1.57);
-  double angle=1.57;
-  //set_theta(&fsm_asser,angle);
-  angle*=-1;
-
-  set_translation_speed(&fsm_asser,100.0);
-  double d=-100;
-  //set_translation(&fsm_asser,d);
-  d*=-1;
-
-  set_X_Y_theta(&fsm_asser,20,-20,(-45-200)*Pi/180,1);
 
   double t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0,t1;
-  while(1)
+  reset_odometry();
+  while(enable)
   {
     fsm->run(fsm);
     odom = odometry_get_position();
     get_order(&fsm_asser, &sum_goal, &diff_goal);
-
-    //print_odometry(&odom);
-    //delay_ms(1000);
-    if(fsm->run==FSM_NOP)//condition for command end
-    {
-      print_odometry(&odom);
-
-      //set_theta(&fsm_asser,angle);
-      angle*=-1;
-
-      //set_translation(&fsm_asser,d);
-      d*=-1;
-
-      //led_set_status(1);
-    }
-    else
-    {
-      led_set_status(0);
-    }
 
     voltage_sum = pid(
       &pid_sigma,
@@ -119,4 +92,7 @@ void asservissement() {
     t0=t1;
 
   }
+
+  motor_a_set(0);
+  motor_b_set(0);
 }

@@ -30,3 +30,4 @@ void odometry_setup();
 odometry odometry_get_position();
 
 void print_odometry(odometry *odom);
+void reset_odometry();

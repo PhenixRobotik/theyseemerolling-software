@@ -45,6 +45,8 @@ typedef struct FSM_asser_S{
   int fsm_pointer_max;
 }FSM_asser;
 
+extern FSM_asser fsm_asser;
+
 void init_FSM_asser(FSM_asser *fsm_asser,PID_Status *pid_sigma,PID_Status *pid_theta);//PIDs just to check reached or not
 
 void set_stop(FSM_asser *fsm_asser);//stop the robot at the current position
@@ -53,6 +55,7 @@ void set_theta_speed(FSM_asser *fsm_asser,double vth);//in rad/s
 void set_translation(FSM_asser *fsm_asser,double t);//in mm
 void set_translation_speed(FSM_asser *fsm_asser,double vt);//in mm/s
 void set_X_Y_theta(FSM_asser *fsm_asser,double x,double y,double theta,int back);//mm, mm, rad, go backward
+// TODO : get state
 
 void set_X_Y_theta_translation(FSM_asser *fsm_asser);//internal do not use
 void set_X_Y_theta_rotation(FSM_asser *fsm_asser);//internal do not use
