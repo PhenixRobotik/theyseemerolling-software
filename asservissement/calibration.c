@@ -6,9 +6,9 @@ const double Pi =  3.14159265359;
 
 // Robot mechanical caracteristics, dimensions in mm
 
-const double Encoders_Axis_Distance  = 193.0;
-const double Encoders_Wheel_Diameter_l = 62;
-const double Encoders_Wheel_Diameter_r = 60.0;
+const double Encoders_Axis_Distance  = 192.0;
+const double Encoders_Wheel_Diameter_l = 61.4;
+const double Encoders_Wheel_Diameter_r = 59.4;
 const double Encoders_Dist_Per_Step_l  = Encoders_Wheel_Diameter_l * Pi / ENCODER_PERIOD;
 const double Encoders_Dist_Per_Step_r  = Encoders_Wheel_Diameter_r * Pi / ENCODER_PERIOD;
 const double Encoders_Theta_Per_Diff_l = Encoders_Dist_Per_Step_l / Encoders_Axis_Distance;
