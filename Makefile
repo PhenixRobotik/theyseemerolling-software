@@ -113,6 +113,7 @@ tests.elf: \
 		lowlevel/can.c.o \
 		lowlevel/clock.c.o \
 		lowlevel/uart.c.o \
+		can/can.c.o \
 		lowlevel/eeprom.c.o \
 		lowlevel/encoders.c.o \
 		lowlevel/gpio.c.o \

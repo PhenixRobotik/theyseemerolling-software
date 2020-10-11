@@ -24,7 +24,7 @@ void hard_fault_handler() {
 volatile bool enable = 0;
 int main() {
   clock_setup();
-  gpio_setup();  
+  gpio_setup();
   uart_setup();
   can_setup();
   setup_com(); //mdr
@@ -34,13 +34,22 @@ int main() {
   // Pour commencer dans de bonnes conditions
   hard_fault_handler();
 
+  //test
+  while(1)
+  {
+    delay_ms(1000);
+    led_toggle_status();
+    motor_a_set(0);
+    motor_b_set(0);
+  }
+
   do{
     while(!enable);
     asservissement();
   }while(true != false);
-    
+
   // TODO : priorités interruptions
-  
+
   while (1) {};
   return 0;
 }

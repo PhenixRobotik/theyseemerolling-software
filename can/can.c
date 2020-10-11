@@ -13,7 +13,7 @@ static void can_enable_irqs();
 int can_setup(void){
   /* Enable bxCAN clock */
   rcc_periph_clock_enable(RCC_CAN1);
-  
+
   /* Reset bxCAN */
   can_reset(CAN1);
 
@@ -40,7 +40,7 @@ int can_setup(void){
     );
   // TODO : baud rate enum ?
   // TODO : add parameters for baud rate
-  
+
   if(err){
     return -1;
   } else {
@@ -64,21 +64,21 @@ int can_setup(void){
     0,     /* FIFO assignment (here: FIFO0) */
     true); /* Enable the filter. */
 
-  
+
   /* Enable interrupts */
   can_enable_irqs();
-  
+
   return 0;
 }
 
 static void can_enable_irqs() {
   /* For each interrupt, setup NVIC and set interrupt enable bits */
-  
+
   // RX FIFO 0 interrupt
 #if CAN_ENABLE_IRQ_RX_0 == 1
   nvic_enable_irq(NVIC_USB_LP_CAN1_RX0_IRQ);
   nvic_set_priority(NVIC_USB_LP_CAN1_RX0_IRQ, 2);
-  
+
   can_enable_irq(CAN1, CAN_IER_FMPIE0);
   can_enable_irq(CAN1, CAN_IER_FFIE0);
   can_enable_irq(CAN1, CAN_IER_FOVIE0);
@@ -88,7 +88,7 @@ static void can_enable_irqs() {
 #if CAN_ENABLE_IRQ_RX_1 == 1
   nvic_enable_irq(NVIC_CAN1_RX1_IRQ);
   nvic_set_priority(NVIC_CAN1_RX1_IRQ, 2);
-  
+
   can_enable_irq(CAN1, CAN_IER_FMPIE1);
   can_enable_irq(CAN1, CAN_IER_FFIE1);
   can_enable_irq(CAN1, CAN_IER_FOVIE1);
@@ -101,7 +101,7 @@ static void can_enable_irqs() {
 
   can_enable_irq(CAN1, CAN_IER_TMEIE);
 #endif
-  
+
   // Status Change and Errors interrupt
 #if CAN_ENABLE_IRQ_ERR == 1
   nvic_enable_irq(NVIC_CAN1_SCE_IRQ);
@@ -136,7 +136,7 @@ void usb_hp_can1_tx_isr(void) {
   if(IS_SET(tsr, CAN_TSR_RQCP2)) {
     CLEAR(CAN_TSR(BX_CAN1_BASE), CAN_TSR_RQCP2);
   }
-  
+
   //TODO : check if the transmission succeeded or failed
   can_tx_handler((uint8_t) ((tsr & 1)                |    //mailbox 0 (@ bit 0 ->  bit 0)
 			    ((tsr >> (8-1)) & 0b10)  |    //mailbox 1 (@ bit 8 ->  bit 1)
