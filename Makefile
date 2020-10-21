@@ -97,11 +97,9 @@ tsmr.elf: \
 		asservissement/calibration.c.o \
 		asservissement/odometry.c.o \
 		asservissement/pid.c.o \
-		can/link_can.c.o \
-		can/rc_server.c.o \
-		can/remote_call.c.o \
-		can/robotronik_protocol.c.o \
+		can/canard_link.c.o \
 		can/can.c.o \
+		libcanard/libcanard/canard.c \
 		main.c.o \
 		|
 	$(CC) $(CFlags) $^ $(LFlags) -o $@
@@ -120,6 +118,7 @@ tests.elf: \
 		asservissement/calibration.c.o \
 		asservissement/odometry.c.o \
 		asservissement/pid.c.o \
+		libcanard/libcanard/canard.c \
 		main_tests.c.o \
 		|
 	$(CC) $(CFlags) $^ $(LFlags) -o $@

@@ -4,7 +4,8 @@
 #include "lowlevel/motors.h"
 
 #include "can/can.h"
-#include "can/link_can.h"
+#include "can/canard_link.h"
+#include "can/can_defines.h"
 
 #include "fsm/fsm_asser.h"
 #include "asservissement/odometry.h"
@@ -13,6 +14,8 @@
 
 #include <libopencm3/stm32/can.h>
 #include <stdbool.h>
+
+static global_data data_g;
 
 void asservissement();
 
@@ -26,13 +29,18 @@ int main() {
   clock_setup();
   gpio_setup();
   uart_setup();
-  can_setup();
-  setup_com(); //mdr
   motors_setup();
   odometry_setup();
 
-  // Pour commencer dans de bonnes conditions
-  hard_fault_handler();
+  can_setup();
+  init_can_link(&data_g);
+
+  while(1)
+  {
+    delay_ms(500);
+    tx_feed_back(&data_g);
+    led_toggle_status();
+  }
 
   //test
   while(1)
