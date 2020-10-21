@@ -110,7 +110,6 @@ tsmr.elf: \
 
 tests.elf: \
 		lowlevel/adc.c.o \
-		lowlevel/can.c.o \
 		lowlevel/clock.c.o \
 		lowlevel/uart.c.o \
 		can/can.c.o \

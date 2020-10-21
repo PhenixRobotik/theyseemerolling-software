@@ -69,12 +69,15 @@ int main() {
   gpio_setup();
   uart_setup();
 
-  can_setup();
+  //can_setup();
 
 
   odometry_setup();
 
-  // motors_setup();
+  motors_setup();
+
+  //motor_blink();
+  test_encoders();
   //test_uart_send();
 
   uint8_t buffer[8];
@@ -82,7 +85,7 @@ int main() {
 
   while(1)
   {
-    can_transmit(CAN1 , 1234, 0, 0, 1, buffer);
+    //can_transmit(CAN1 , 1234, 0, 0, 1, buffer);
     delay_ms(500);
     led_toggle_status();
   }
