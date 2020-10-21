@@ -28,6 +28,8 @@ typedef struct{//positions in mm and angles in rad
 
 void odometry_setup();
 odometry odometry_get_position();
+int odometry_get_l();
+int odometry_get_r();
 
 void print_odometry(odometry *odom);
 void reset_odometry();

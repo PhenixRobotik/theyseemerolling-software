@@ -15,7 +15,7 @@ Left encoder configuration
 #define ENCODER_L_RCC_TIM RCC_TIM1
 #define ENCODER_L_TIM TIM1
 
-#define ENCODER_L_INVERSION 0
+#define ENCODER_L_INVERSION 1
 
 #define ENCODER_L_CH1_PORT GPIOA
 #define ENCODER_L_CH1_PORT_RCC RCC_GPIOA
@@ -33,7 +33,7 @@ Right encoder configuration
 #define ENCODER_R_RCC_TIM RCC_TIM2
 #define ENCODER_R_TIM TIM2
 
-#define ENCODER_R_INVERSION 0
+#define ENCODER_R_INVERSION 1
 
 #define ENCODER_R_CH1_PORT GPIOA
 #define ENCODER_R_CH1_PORT_RCC RCC_GPIOA

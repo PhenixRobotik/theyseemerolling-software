@@ -37,7 +37,8 @@ int main() {
 
   while(1)
   {
-    delay_ms(500);
+    delay_ms(100);
+    data_g.odom = odometry_get_position();
     tx_feed_back(&data_g);
     led_toggle_status();
   }

@@ -57,6 +57,9 @@ void can_rx_handler(uint8_t fifo, uint8_t pending, bool full, bool overrun)
 static volatile CanardRxSubscription tsmr_in_subscription;
 
 static volatile int tsmr_out_transfer_id;
+static volatile int tsmr_encl_transfer_id;
+static volatile int tsmr_encr_transfer_id;
+static volatile int tsmr_odom_transfer_id;
 
 
 static void* memAllocate(CanardInstance* const ins, const size_t amount)
@@ -78,6 +81,9 @@ void init_can_link(global_data *pdata)
   pdata_g = pdata;
 
   tsmr_out_transfer_id = 0;
+  tsmr_encl_transfer_id = 0;
+  tsmr_encr_transfer_id = 0;
+  tsmr_odom_transfer_id = 0;
 
   pdata->can_ins = canardInit(&memAllocate, &memFree);
   pdata->can_ins.mtu_bytes = CANARD_MTU_CAN_CLASSIC;  // Defaults to 64 (CAN FD); here we select Classic CAN.
@@ -168,11 +174,27 @@ int tx_feed_back(global_data *pdata)
       .remote_node_id = CANARD_NODE_ID_UNSET,       // Messages cannot be unicast, so use UNSET.
   };
 
-  transfer.port_id        = TSMR_TEXT_GET;
-  transfer.transfer_id    = tsmr_out_transfer_id;
-  transfer.payload_size   = 11;
-  transfer.payload        = "hello stm32";
-  ++tsmr_out_transfer_id;  // The transfer-ID shall be incremented after every transmission on this subject.
+  transfer.port_id        = TSMR_ENCL_GET;
+  transfer.transfer_id    = tsmr_encl_transfer_id;
+  transfer.payload_size   = 4;
+  transfer.payload        = &pdata->odom.left_count;
+  ++tsmr_encl_transfer_id;  // The transfer-ID shall be incremented after every transmission on this subject.
+  result = canardTxPush(&pdata->can_ins, &transfer);
+  canard_send_tx_queue(&pdata->can_ins);
+
+  transfer.port_id        = TSMR_ENCR_GET;
+  transfer.transfer_id    = tsmr_encr_transfer_id;
+  //transfer.payload_size   = 4;
+  transfer.payload        = &pdata->odom.right_count;
+  ++tsmr_encr_transfer_id;  // The transfer-ID shall be incremented after every transmission on this subject.
+  result = canardTxPush(&pdata->can_ins, &transfer);
+  canard_send_tx_queue(&pdata->can_ins);
+
+  transfer.port_id        = TSMR_ODOM_GET;
+  transfer.transfer_id    = tsmr_odom_transfer_id;
+  transfer.payload_size   = 24;
+  transfer.payload        = &pdata->odom.x;//works by convention
+  ++tsmr_odom_transfer_id;  // The transfer-ID shall be incremented after every transmission on this subject.
   result = canardTxPush(&pdata->can_ins, &transfer);
   canard_send_tx_queue(&pdata->can_ins);
 

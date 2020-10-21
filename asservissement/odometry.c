@@ -94,6 +94,16 @@ odometry odometry_get_position()
   return odometry_internal;
 }
 
+int odometry_get_l()
+{
+	return odometry_internal.left_count;
+}
+
+int odometry_get_r()
+{
+	return odometry_internal.right_count;
+}
+
 
 void print_odometry(odometry *odom) {
   uart_send_string("\r\n");
