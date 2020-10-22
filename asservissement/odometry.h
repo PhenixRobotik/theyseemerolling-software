@@ -33,3 +33,4 @@ int odometry_get_r();
 
 void print_odometry(odometry *odom);
 void reset_odometry();
+void set_odometry(float x, float y, float theta);

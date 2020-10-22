@@ -38,7 +38,13 @@ int main() {
   while(1)
   {
     delay_ms(100);
+    if(data_g.odom_to_set)
+    {
+      data_g.odom_to_set = 0;
+      set_odometry(data_g.x_set, data_g.y_set, data_g.theta_set);
+    }
     data_g.odom = odometry_get_position();
+    data_g.about_da_power = about_da_power();
     tx_feed_back(&data_g);
     led_toggle_status();
   }

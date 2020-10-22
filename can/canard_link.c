@@ -55,11 +55,16 @@ void can_rx_handler(uint8_t fifo, uint8_t pending, bool full, bool overrun)
 
 
 static volatile CanardRxSubscription tsmr_in_subscription;
+static volatile CanardRxSubscription tsmr_enc_l_subscription;
+static volatile CanardRxSubscription tsmr_enc_r_subscription;
+static volatile CanardRxSubscription tsmr_odom_subscription;
+static volatile CanardRxSubscription tsmr_power_subscription;
 
 static volatile int tsmr_out_transfer_id;
 static volatile int tsmr_encl_transfer_id;
 static volatile int tsmr_encr_transfer_id;
 static volatile int tsmr_odom_transfer_id;
+static volatile int tsmr_power_transfer_id;
 
 
 static void* memAllocate(CanardInstance* const ins, const size_t amount)
@@ -80,10 +85,15 @@ void init_can_link(global_data *pdata)
 {
   pdata_g = pdata;
 
+  pdata->stream_enc_l = 1;
+  pdata->stream_enc_r = 1;
+  pdata->stream_power = 1;
+
   tsmr_out_transfer_id = 0;
   tsmr_encl_transfer_id = 0;
   tsmr_encr_transfer_id = 0;
   tsmr_odom_transfer_id = 0;
+  tsmr_power_transfer_id = 0;
 
   pdata->can_ins = canardInit(&memAllocate, &memFree);
   pdata->can_ins.mtu_bytes = CANARD_MTU_CAN_CLASSIC;  // Defaults to 64 (CAN FD); here we select Classic CAN.
@@ -95,6 +105,34 @@ void init_can_link(global_data *pdata)
                          128,   // The extent (the maximum payload size); pick a huge value if not sure.
                          CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
                          &tsmr_in_subscription);
+
+  (void) canardRxSubscribe(&pdata->can_ins,
+                         CanardTransferKindMessage,
+                         TSMR_ENCL_SET,
+                         4,
+                         CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                         &tsmr_enc_l_subscription);
+
+  (void) canardRxSubscribe(&pdata->can_ins,
+                         CanardTransferKindMessage,
+                         TSMR_ENCR_SET,
+                         4,
+                         CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                         &tsmr_enc_r_subscription);
+
+  (void) canardRxSubscribe(&pdata->can_ins,
+                         CanardTransferKindMessage,
+                         TSMR_ODOM_SET,
+                         12,
+                         CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                         &tsmr_odom_subscription);
+
+  (void) canardRxSubscribe(&pdata->can_ins,
+                         CanardTransferKindMessage,
+                         TSMR_POWER_SET,
+                         1,
+                         CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                         &tsmr_power_subscription);
 }
 
 int canard_send_tx_queue(CanardInstance *pins)
@@ -153,6 +191,33 @@ int decode_can_rx(global_data *pdata, CanardTransfer *ptransfer)
     }
     uart_send_string("\n");
   }
+  else if( ptransfer->port_id == TSMR_ENCL_SET )
+  {
+    if(ptransfer->payload_size != 2)
+      return 0;
+    pdata->stream_enc_l = ((int16_t*)ptransfer->payload)[0];
+  }
+  else if( ptransfer->port_id == TSMR_ENCR_SET )
+  {
+    if(ptransfer->payload_size != 2)
+      return 0;
+    pdata->stream_enc_r = ((int16_t*)ptransfer->payload)[0];
+  }
+  else if( ptransfer->port_id == TSMR_POWER_SET )
+  {
+    if(ptransfer->payload_size != 1)
+      return 0;
+    pdata->stream_power = ((char*)ptransfer->payload)[0];
+  }
+  else if( ptransfer->port_id == TSMR_ODOM_SET )
+  {
+    if(ptransfer->payload_size != 12)
+      return 0;
+    pdata->x_set = ((float *)ptransfer->payload)[0];
+    pdata->y_set = ((float *)ptransfer->payload)[1];
+    pdata->theta_set = ((float *)ptransfer->payload)[2];
+    pdata->odom_to_set = 1;
+  }
   else
   {
     return 0;
@@ -166,6 +231,7 @@ int tx_feed_back(global_data *pdata)
   int32_t result;
 
   uint8_t byte;
+  uint16_t enc_count;
 
   CanardTransfer transfer = {
       .timestamp_usec = 0,      // Zero if transmission deadline is not limited.
@@ -174,29 +240,52 @@ int tx_feed_back(global_data *pdata)
       .remote_node_id = CANARD_NODE_ID_UNSET,       // Messages cannot be unicast, so use UNSET.
   };
 
-  transfer.port_id        = TSMR_ENCL_GET;
-  transfer.transfer_id    = tsmr_encl_transfer_id;
-  transfer.payload_size   = 4;
-  transfer.payload        = &pdata->odom.left_count;
-  ++tsmr_encl_transfer_id;  // The transfer-ID shall be incremented after every transmission on this subject.
-  result = canardTxPush(&pdata->can_ins, &transfer);
-  canard_send_tx_queue(&pdata->can_ins);
+  if(pdata->stream_enc_l)
+  {
+    transfer.port_id        = TSMR_ENCL_GET;
+    transfer.transfer_id    = tsmr_encl_transfer_id;
+    transfer.payload_size   = 2;
+    enc_count = pdata->odom.left_count;
+    transfer.payload        = &enc_count;
+    ++tsmr_encl_transfer_id;  // The transfer-ID shall be incremented after every transmission on this subject.
+    result = canardTxPush(&pdata->can_ins, &transfer);
+    canard_send_tx_queue(&pdata->can_ins);
+  }
 
-  transfer.port_id        = TSMR_ENCR_GET;
-  transfer.transfer_id    = tsmr_encr_transfer_id;
-  //transfer.payload_size   = 4;
-  transfer.payload        = &pdata->odom.right_count;
-  ++tsmr_encr_transfer_id;  // The transfer-ID shall be incremented after every transmission on this subject.
-  result = canardTxPush(&pdata->can_ins, &transfer);
-  canard_send_tx_queue(&pdata->can_ins);
+  if(pdata->stream_enc_r)
+  {
+    transfer.port_id        = TSMR_ENCR_GET;
+    transfer.transfer_id    = tsmr_encr_transfer_id;
+    transfer.payload_size   = 2;
+    enc_count = pdata->odom.right_count;
+    transfer.payload        = &enc_count;
+    ++tsmr_encr_transfer_id;  // The transfer-ID shall be incremented after every transmission on this subject.
+    result = canardTxPush(&pdata->can_ins, &transfer);
+    canard_send_tx_queue(&pdata->can_ins);
+  }
 
   transfer.port_id        = TSMR_ODOM_GET;
   transfer.transfer_id    = tsmr_odom_transfer_id;
-  transfer.payload_size   = 24;
-  transfer.payload        = &pdata->odom.x;//works by convention
+  transfer.payload_size   = 12;
+  float odom_buff[3];
+  odom_buff[0] = pdata->odom.x;
+  odom_buff[1] = pdata->odom.y;
+  odom_buff[2] = pdata->odom.theta;
+  transfer.payload        = odom_buff;
   ++tsmr_odom_transfer_id;  // The transfer-ID shall be incremented after every transmission on this subject.
   result = canardTxPush(&pdata->can_ins, &transfer);
   canard_send_tx_queue(&pdata->can_ins);
+
+  if(pdata->stream_power)
+  {
+    transfer.port_id        = TSMR_POWER_GET;
+    transfer.transfer_id    = tsmr_power_transfer_id;
+    transfer.payload_size   = 1;
+    transfer.payload        = &pdata->about_da_power;
+    ++tsmr_power_transfer_id;
+    result = canardTxPush(&pdata->can_ins, &transfer);
+    canard_send_tx_queue(&pdata->can_ins);
+  }
 
   return 1;
 }

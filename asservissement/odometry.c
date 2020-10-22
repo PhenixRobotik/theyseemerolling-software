@@ -55,6 +55,15 @@ void reset_odometry(){
   nvic_enable_irq(ODOM_NVIC_TIM_IRQ);
 }
 
+void set_odometry(float x, float y, float theta)
+{
+	nvic_disable_irq(ODOM_NVIC_TIM_IRQ);
+  odometry_internal.x=x;//init the odometry structure
+  odometry_internal.y=y;
+  odometry_internal.theta=theta;
+  nvic_enable_irq(ODOM_NVIC_TIM_IRQ);
+}
+
 void timX_isr(void)
 {
   if (timer_get_flag(ODOM_TIM, TIM_SR_CC1IF))
