@@ -15,7 +15,7 @@
 #include <libopencm3/stm32/can.h>
 #include <stdbool.h>
 
-#define MAIN_LOOP_PERIOD 0.2
+#define MAIN_LOOP_PERIOD 0.07
 
 static global_data data_g;
 
@@ -27,7 +27,10 @@ void hard_fault_handler() {
 }
 
 volatile bool enable = 0;
-int main() {
+FSM_asser fsm_asser;
+
+int main()
+{
   clock_setup();
   gpio_setup();
   uart_setup();
@@ -36,6 +39,31 @@ int main() {
 
   can_setup();
   init_can_link(&data_g);
+
+
+  //asser init
+  double voltage_A=0,
+        voltage_B=0,
+        voltage_sum=0,
+        voltage_diff=0; // motor control variables
+  double sum_goal=0, diff_goal=0;
+
+
+  PID_Status pid_sigma, pid_theta;
+  pid_init(&pid_sigma, &PID_Configuration_sigma);
+  pid_init(&pid_theta, &PID_Configuration_theta);
+
+  //FSM_asser fsm_asser;
+  init_FSM_asser(&fsm_asser,&pid_sigma,&pid_theta);
+  FSM_Instance *fsm= (FSM_Instance*)&fsm_asser;//set the current fsm to fsm_asser
+
+  reset_odometry();
+
+  //set_translation_speed(&fsm_asser, 10);//in mm/s
+  //set_translation(&fsm_asser, 10);
+
+
+
 
   uint32_t t0, t1;
   double dt;
@@ -53,6 +81,35 @@ int main() {
     tx_feed_back(&data_g);
     led_toggle_status();
 
+
+    enable = 1;
+    if(enable)
+    {
+      fsm->run(fsm);
+      get_order(&fsm_asser, &sum_goal, &diff_goal);
+
+      voltage_sum = pid(
+        &pid_sigma,
+        sum_goal - 0.5 * (data_g.odom.left_total_distance + data_g.odom.right_total_distance)
+      );
+      voltage_diff = pid(
+        &pid_theta,
+        diff_goal - (data_g.odom.right_total_distance - data_g.odom.left_total_distance)
+      );
+
+      voltage_A = voltage_sum + voltage_diff;
+      voltage_B = voltage_sum - voltage_diff;
+
+      motor_b_set(voltage_A);
+      motor_a_set(voltage_B);
+    }
+    else
+    {
+      motor_a_set(0);
+      motor_b_set(0);
+    }
+
+
     do{
       t1 = get_systicks();
       dt = t1 - t0;
@@ -62,65 +119,8 @@ int main() {
     compute_speeds(dt);
   }
 
-  do{
-    while(!enable);
-    asservissement();
-  }while(true != false);
-
   // TODO : priorités interruptions
 
   while (1) {};
   return 0;
-}
-
-FSM_asser fsm_asser;
-void asservissement() {
-  double voltage_A=0,
-        voltage_B=0,
-        voltage_sum=0,
-        voltage_diff=0; // motor control variables
-  double sum_goal=0, diff_goal=0;
-
-  PID_Status pid_sigma, pid_theta;
-  pid_init(&pid_sigma, &PID_Configuration_sigma);
-  pid_init(&pid_theta, &PID_Configuration_theta);
-
-  //FSM_asser fsm_asser;
-  init_FSM_asser(&fsm_asser,&pid_sigma,&pid_theta);
-  FSM_Instance *fsm= (FSM_Instance*)&fsm_asser;//set the current fsm to fsm_asser
-
-  odometry odom;
-
-  double t0=SYSTICK_TO_MILLIS(get_systicks())/1000.0,t1;
-  reset_odometry();
-  while(enable)
-  {
-    fsm->run(fsm);
-    odom = odometry_get_position();
-    get_order(&fsm_asser, &sum_goal, &diff_goal);
-
-    voltage_sum = pid(
-      &pid_sigma,
-      sum_goal - 0.5 * (odom.left_total_distance + odom.right_total_distance)
-    );
-    voltage_diff = pid(
-      &pid_theta,
-      diff_goal - (odom.right_total_distance - odom.left_total_distance)
-    );
-
-    voltage_A = voltage_sum + voltage_diff;
-    voltage_B = voltage_sum - voltage_diff;
-
-    motor_a_set(voltage_A);
-    motor_b_set(voltage_B);
-
-    do{
-      t1=SYSTICK_TO_MILLIS(get_systicks())/1000.0;
-    }while(t1-t0<pid_sigma.conf->Te);
-    t0=t1;
-
-  }
-
-  motor_a_set(0);
-  motor_b_set(0);
 }

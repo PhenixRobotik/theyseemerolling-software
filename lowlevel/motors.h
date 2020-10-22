@@ -13,7 +13,7 @@
 #define PWM_TIM_PRESCALER 1
 
 #define MotorA_Inversion (-1.0) //1 no reverse, -1 reverse
-#define MotorB_Inversion (-1.0) //1 no reverse, -1 reverse
+#define MotorB_Inversion (1.0) //1 no reverse, -1 reverse
 
 
 // Motor A :
