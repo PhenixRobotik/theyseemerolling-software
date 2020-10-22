@@ -266,11 +266,13 @@ int tx_feed_back(global_data *pdata)
 
   transfer.port_id        = TSMR_ODOM_GET;
   transfer.transfer_id    = tsmr_odom_transfer_id;
-  transfer.payload_size   = 12;
-  float odom_buff[3];
+  transfer.payload_size   = 20;
+  float odom_buff[5];
   odom_buff[0] = pdata->odom.x;
   odom_buff[1] = pdata->odom.y;
   odom_buff[2] = pdata->odom.theta;
+  odom_buff[3] = pdata->odom.vx;
+  odom_buff[4] = pdata->odom.wz;
   transfer.payload        = odom_buff;
   ++tsmr_odom_transfer_id;  // The transfer-ID shall be incremented after every transmission on this subject.
   result = canardTxPush(&pdata->can_ins, &transfer);

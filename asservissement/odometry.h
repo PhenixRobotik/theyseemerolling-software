@@ -18,6 +18,11 @@ typedef struct{//positions in mm and angles in rad
   double y;
   double theta;
 
+  double vx;
+  double wz;
+  double prev_tot_x;
+  double theta_prev;
+
   int left_count;//last encoders count
   int left_total_count;//do not use this in asser
   double left_total_distance;//in mm update only when odometry_get_position called
@@ -34,3 +39,4 @@ int odometry_get_r();
 void print_odometry(odometry *odom);
 void reset_odometry();
 void set_odometry(float x, float y, float theta);
+void compute_speeds(double dt);

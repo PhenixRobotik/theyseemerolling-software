@@ -15,6 +15,8 @@
 #include <libopencm3/stm32/can.h>
 #include <stdbool.h>
 
+#define MAIN_LOOP_PERIOD 0.2
+
 static global_data data_g;
 
 void asservissement();
@@ -35,9 +37,12 @@ int main() {
   can_setup();
   init_can_link(&data_g);
 
+  uint32_t t0, t1;
+  double dt;
+  t0 = get_systicks();
+
   while(1)
   {
-    delay_ms(100);
     if(data_g.odom_to_set)
     {
       data_g.odom_to_set = 0;
@@ -47,15 +52,14 @@ int main() {
     data_g.about_da_power = about_da_power();
     tx_feed_back(&data_g);
     led_toggle_status();
-  }
 
-  //test
-  while(1)
-  {
-    delay_ms(1000);
-    led_toggle_status();
-    motor_a_set(0);
-    motor_b_set(0);
+    do{
+      t1 = get_systicks();
+      dt = t1 - t0;
+      dt = SYSTICK_TO_MILLIS(dt)/1000.0;
+    }while(dt<MAIN_LOOP_PERIOD);
+    t0 = t1;
+    compute_speeds(dt);
   }
 
   do{

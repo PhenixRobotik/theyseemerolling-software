@@ -52,16 +52,44 @@ void reset_odometry(){
   odometry_internal.x=0;//init the odometry structure
   odometry_internal.y=0;
   odometry_internal.theta=0;
+	odometry_internal.vx = 0;
+	odometry_internal.wz = 0;
+	odometry_internal.prev_tot_x = 0;
+	odometry_internal.theta_prev = 0;
   nvic_enable_irq(ODOM_NVIC_TIM_IRQ);
 }
 
 void set_odometry(float x, float y, float theta)
 {
 	nvic_disable_irq(ODOM_NVIC_TIM_IRQ);
-  odometry_internal.x=x;//init the odometry structure
-  odometry_internal.y=y;
-  odometry_internal.theta=theta;
+  odometry_internal.x = x;
+  odometry_internal.y = y;
+  odometry_internal.theta = theta;
+
+	odometry_internal.vx = 0;
+	odometry_internal.wz = 0;
+	odometry_internal.prev_tot_x = sqrt(x*x+y*y);
+	odometry_internal.theta_prev = theta;
   nvic_enable_irq(ODOM_NVIC_TIM_IRQ);
+}
+
+void compute_speeds(double dt)
+{
+	double tot_x =sqrt(odometry_internal.x*odometry_internal.x + odometry_internal.y*odometry_internal.y);
+	odometry_internal.vx = sqrt(odometry_internal.x*odometry_internal.x + odometry_internal.y*odometry_internal.y) - odometry_internal.prev_tot_x;
+	odometry_internal.prev_tot_x = tot_x;
+
+	odometry_internal.wz = odometry_internal.theta - odometry_internal.theta_prev;
+	odometry_internal.theta_prev = odometry_internal.theta;
+	if(odometry_internal.wz > Pi)
+	{
+		odometry_internal.wz += -2*Pi;
+	}
+	else if(odometry_internal.wz < -Pi)
+	{
+		odometry_internal.wz += +2*Pi;
+	}
+	odometry_internal.wz /= dt;
 }
 
 void timX_isr(void)
