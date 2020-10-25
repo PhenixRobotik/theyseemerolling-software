@@ -1,6 +1,8 @@
 #include "canard_link.h"
 #include "can_defines.h"
 
+#include "lowlevel/uart.h"
+
 #include <stdlib.h>
 #include <libopencm3/stm32/can.h>
 
@@ -48,23 +50,34 @@ void can_rx_handler(uint8_t fifo, uint8_t pending, bool full, bool overrun)
   (void)rtr;
   (void)fmi;
   (void)timestamp;
+  (void)fifo;
+  (void)result;
+  (void)pending;
 }
 
 
 
 
 
-static volatile CanardRxSubscription tsmr_in_subscription;
-static volatile CanardRxSubscription tsmr_enc_l_subscription;
-static volatile CanardRxSubscription tsmr_enc_r_subscription;
-static volatile CanardRxSubscription tsmr_odom_subscription;
-static volatile CanardRxSubscription tsmr_power_subscription;
+static CanardRxSubscription tsmr_in_subscription;
+static CanardRxSubscription tsmr_enc_l_subscription;
+static CanardRxSubscription tsmr_enc_r_subscription;
+static CanardRxSubscription tsmr_odom_subscription;
+static CanardRxSubscription tsmr_power_subscription;
+static CanardRxSubscription tsmr_t_subscription;
+static CanardRxSubscription tsmr_ts_subscription;
+static CanardRxSubscription tsmr_r_subscription;
+static CanardRxSubscription tsmr_rs_subscription;
 
 static volatile int tsmr_out_transfer_id;
 static volatile int tsmr_encl_transfer_id;
 static volatile int tsmr_encr_transfer_id;
 static volatile int tsmr_odom_transfer_id;
 static volatile int tsmr_power_transfer_id;
+static volatile int tsmr_t_transfer_id;
+static volatile int tsmr_ts_transfer_id;
+static volatile int tsmr_r_transfer_id;
+static volatile int tsmr_rs_transfer_id;
 
 
 static void* memAllocate(CanardInstance* const ins, const size_t amount)
@@ -89,11 +102,17 @@ void init_can_link(global_data *pdata)
   pdata->stream_enc_r = 1;
   pdata->stream_power = 1;
 
+  pdata->translation_to_set = 0;
+
   tsmr_out_transfer_id = 0;
   tsmr_encl_transfer_id = 0;
   tsmr_encr_transfer_id = 0;
   tsmr_odom_transfer_id = 0;
   tsmr_power_transfer_id = 0;
+  tsmr_r_transfer_id = 0;
+  tsmr_rs_transfer_id = 0;
+  tsmr_t_transfer_id = 0;
+  tsmr_ts_transfer_id = 0;
 
   pdata->can_ins = canardInit(&memAllocate, &memFree);
   pdata->can_ins.mtu_bytes = CANARD_MTU_CAN_CLASSIC;  // Defaults to 64 (CAN FD); here we select Classic CAN.
@@ -133,6 +152,34 @@ void init_can_link(global_data *pdata)
                          1,
                          CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
                          &tsmr_power_subscription);
+
+  (void) canardRxSubscribe(&pdata->can_ins,
+                         CanardTransferKindMessage,
+                         TSMR_T_SET,
+                         4,
+                         CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                         &tsmr_t_subscription);
+
+  (void) canardRxSubscribe(&pdata->can_ins,
+                        CanardTransferKindMessage,
+                        TSMR_TS_SET,
+                        4,
+                        CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                        &tsmr_ts_subscription);
+
+  (void) canardRxSubscribe(&pdata->can_ins,
+                         CanardTransferKindMessage,
+                         TSMR_R_SET,
+                         4,
+                         CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                         &tsmr_r_subscription);
+
+  (void) canardRxSubscribe(&pdata->can_ins,
+                        CanardTransferKindMessage,
+                        TSMR_RS_SET,
+                        4,
+                        CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                        &tsmr_rs_subscription);
 }
 
 int canard_send_tx_queue(CanardInstance *pins)
@@ -143,7 +190,7 @@ int canard_send_tx_queue(CanardInstance *pins)
     // Send the frame. Redundant interfaces may be used here.
 
     //trying to send, -1 is sending queue full
-    while(can_transmit(CAN1, txf->extended_can_id, 1, 0, txf->payload_size, txf->payload) == -1);
+    while(can_transmit(CAN1, txf->extended_can_id, 1, 0, txf->payload_size, (uint8_t *) txf->payload) == -1);
                                  // If the driver is busy, break and retry later.
     canardTxPop(pins);                         // Remove the frame from the queue after it's transmitted.
     pins->memory_free(pins, (CanardFrame*)txf);  // Deallocate the dynamic memory afterwards.
@@ -182,7 +229,7 @@ int decode_can_rx(global_data *pdata, CanardTransfer *ptransfer)
 {
   if( ptransfer->port_id == TSMR_TEXT_SET )
   {
-    for(int i=0; i<ptransfer->payload_size; i++)
+    for(unsigned int i=0; i<ptransfer->payload_size; i++)
     {
       char to_send[2];
       to_send[0] = ((char*)ptransfer->payload)[i];
@@ -218,6 +265,34 @@ int decode_can_rx(global_data *pdata, CanardTransfer *ptransfer)
     pdata->theta_set = ((float *)ptransfer->payload)[2];
     pdata->odom_to_set = 1;
   }
+  else if( ptransfer->port_id == TSMR_T_SET )
+  {
+    if(ptransfer->payload_size != 4)
+      return 0;
+    pdata->translation_to_set_value = ((float*)ptransfer->payload)[0];
+    pdata->translation_to_set = 1;
+  }
+  else if( ptransfer->port_id == TSMR_TS_SET )
+  {
+    if(ptransfer->payload_size != 4)
+      return 0;
+    pdata->translation_speed_to_set_value = ((float*)ptransfer->payload)[0];
+    pdata->translation_speed_to_set = 1;
+  }
+  else if( ptransfer->port_id == TSMR_R_SET )
+  {
+    if(ptransfer->payload_size != 4)
+      return 0;
+    pdata->rotation_to_set_value = ((float*)ptransfer->payload)[0];
+    pdata->rotation_to_set = 1;
+  }
+  else if( ptransfer->port_id == TSMR_RS_SET )
+  {
+    if(ptransfer->payload_size != 4)
+      return 0;
+    pdata->rotation_speed_to_set_value = ((float*)ptransfer->payload)[0];
+    pdata->rotation_speed_to_set = 1;
+  }
   else
   {
     return 0;
@@ -230,7 +305,6 @@ int tx_feed_back(global_data *pdata)
 {
   int32_t result;
 
-  uint8_t byte;
   uint16_t enc_count;
 
   CanardTransfer transfer = {
@@ -288,6 +362,49 @@ int tx_feed_back(global_data *pdata)
     result = canardTxPush(&pdata->can_ins, &transfer);
     canard_send_tx_queue(&pdata->can_ins);
   }
+
+  if(pdata->translation_to_set == 1)
+  {
+    transfer.port_id        = TSMR_T_GET;
+    transfer.transfer_id    = tsmr_t_transfer_id;
+    transfer.payload_size   = 4;
+    transfer.payload        = &pdata->translation_to_set_value;
+    ++tsmr_t_transfer_id;
+    result = canardTxPush(&pdata->can_ins, &transfer);
+    canard_send_tx_queue(&pdata->can_ins);
+  }
+  if(pdata->translation_speed_to_set == 1)
+  {
+    transfer.port_id        = TSMR_TS_GET;
+    transfer.transfer_id    = tsmr_ts_transfer_id;
+    transfer.payload_size   = 4;
+    transfer.payload        = &pdata->translation_speed_to_set_value;
+    ++tsmr_ts_transfer_id;
+    result = canardTxPush(&pdata->can_ins, &transfer);
+    canard_send_tx_queue(&pdata->can_ins);
+  }
+  if(pdata->rotation_to_set == 1)
+  {
+    transfer.port_id        = TSMR_R_GET;
+    transfer.transfer_id    = tsmr_r_transfer_id;
+    transfer.payload_size   = 4;
+    transfer.payload        = &pdata->rotation_to_set_value;
+    ++tsmr_r_transfer_id;
+    result = canardTxPush(&pdata->can_ins, &transfer);
+    canard_send_tx_queue(&pdata->can_ins);
+  }
+  if(pdata->rotation_speed_to_set == 1)
+  {
+    transfer.port_id        = TSMR_RS_GET;
+    transfer.transfer_id    = tsmr_rs_transfer_id;
+    transfer.payload_size   = 4;
+    transfer.payload        = &pdata->rotation_speed_to_set_value;
+    ++tsmr_rs_transfer_id;
+    result = canardTxPush(&pdata->can_ins, &transfer);
+    canard_send_tx_queue(&pdata->can_ins);
+  }
+
+  (void)result;
 
   return 1;
 }

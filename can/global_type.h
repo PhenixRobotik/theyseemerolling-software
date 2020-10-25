@@ -18,4 +18,14 @@ typedef struct{
   float theta_set;
   uint8_t odom_to_set;
 
+  float translation_to_set_value;
+  uint8_t translation_to_set;
+  float translation_speed_to_set_value;
+  uint8_t translation_speed_to_set;
+
+  float rotation_to_set_value;
+  uint8_t rotation_to_set;
+  float rotation_speed_to_set_value;
+  uint8_t rotation_speed_to_set;
+
 }global_data;

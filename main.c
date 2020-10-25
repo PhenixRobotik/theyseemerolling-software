@@ -59,7 +59,6 @@ int main()
 
   reset_odometry();
 
-  //set_translation_speed(&fsm_asser, 10);//in mm/s
   //set_translation(&fsm_asser, 10);
 
 
@@ -85,6 +84,27 @@ int main()
     enable = 1;
     if(enable)
     {
+      if(data_g.translation_speed_to_set)
+      {
+        set_translation_speed(&fsm_asser, data_g.translation_speed_to_set_value);//in mm/s
+        data_g.translation_speed_to_set = 0;
+      }
+      if(data_g.rotation_speed_to_set)
+      {
+        set_theta_speed(&fsm_asser, data_g.rotation_speed_to_set_value);//in rad/s
+        data_g.rotation_speed_to_set = 0;
+      }
+      if(data_g.translation_to_set)
+      {
+        set_translation(&fsm_asser, data_g.translation_to_set_value);//in mm/s
+        data_g.translation_to_set = 0;
+      }
+      if(data_g.rotation_to_set)
+      {
+        set_theta(&fsm_asser, data_g.rotation_to_set_value);//in rad/s
+        data_g.rotation_to_set = 0;
+      }
+
       fsm->run(fsm);
       get_order(&fsm_asser, &sum_goal, &diff_goal);
 
