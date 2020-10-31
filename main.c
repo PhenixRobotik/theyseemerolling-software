@@ -104,6 +104,16 @@ int main()
         set_theta(&fsm_asser, data_g.rotation_to_set_value);//in rad/s
         data_g.rotation_to_set = 0;
       }
+      if(data_g.XYtheta_to_set == 1)
+      {
+        set_X_Y_theta(&fsm_asser, data_g.XYtheta_value_x, data_g.XYtheta_value_y, data_g.XYtheta_value_theta, 0);
+        data_g.XYtheta_to_set = 0;
+      }
+      if(data_g.XYtheta_to_set == 2)
+      {
+        set_X_Y_theta(&fsm_asser, data_g.XYtheta_value_x, data_g.XYtheta_value_y, data_g.XYtheta_value_theta, 1);
+        data_g.XYtheta_to_set = 0;
+      }
 
       fsm->run(fsm);
       get_order(&fsm_asser, &sum_goal, &diff_goal);

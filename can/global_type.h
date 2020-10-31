@@ -28,4 +28,9 @@ typedef struct{
   float rotation_speed_to_set_value;
   uint8_t rotation_speed_to_set;
 
+  uint8_t XYtheta_to_set;
+  float XYtheta_value_x;
+  float XYtheta_value_y;
+  float XYtheta_value_theta;
+
 }global_data;

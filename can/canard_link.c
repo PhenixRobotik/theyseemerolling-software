@@ -68,6 +68,8 @@ static CanardRxSubscription tsmr_t_subscription;
 static CanardRxSubscription tsmr_ts_subscription;
 static CanardRxSubscription tsmr_r_subscription;
 static CanardRxSubscription tsmr_rs_subscription;
+static CanardRxSubscription tsmr_xyt_subscription;
+static CanardRxSubscription tsmr_xyt_back_subscription;
 
 static volatile int tsmr_out_transfer_id;
 static volatile int tsmr_encl_transfer_id;
@@ -78,6 +80,8 @@ static volatile int tsmr_t_transfer_id;
 static volatile int tsmr_ts_transfer_id;
 static volatile int tsmr_r_transfer_id;
 static volatile int tsmr_rs_transfer_id;
+static volatile int tsmr_xyt_transfer_id;
+static volatile int tsmr_xyt_back_transfer_id;
 
 
 static void* memAllocate(CanardInstance* const ins, const size_t amount)
@@ -103,6 +107,10 @@ void init_can_link(global_data *pdata)
   pdata->stream_power = 1;
 
   pdata->translation_to_set = 0;
+  pdata->translation_speed_to_set = 0;
+  pdata->rotation_to_set = 0;
+  pdata->rotation_speed_to_set = 0;
+  pdata->XYtheta_to_set = 0;
 
   tsmr_out_transfer_id = 0;
   tsmr_encl_transfer_id = 0;
@@ -113,6 +121,8 @@ void init_can_link(global_data *pdata)
   tsmr_rs_transfer_id = 0;
   tsmr_t_transfer_id = 0;
   tsmr_ts_transfer_id = 0;
+  tsmr_xyt_transfer_id = 0;
+  tsmr_xyt_back_transfer_id = 0;
 
   pdata->can_ins = canardInit(&memAllocate, &memFree);
   pdata->can_ins.mtu_bytes = CANARD_MTU_CAN_CLASSIC;  // Defaults to 64 (CAN FD); here we select Classic CAN.
@@ -180,6 +190,19 @@ void init_can_link(global_data *pdata)
                         4,
                         CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
                         &tsmr_rs_subscription);
+
+  (void) canardRxSubscribe(&pdata->can_ins,
+                        CanardTransferKindMessage,
+                        TSMR_XYT_SET,
+                        12,
+                        CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                        &tsmr_xyt_subscription);
+  (void) canardRxSubscribe(&pdata->can_ins,
+                        CanardTransferKindMessage,
+                        TSMR_XYT_BACK_SET,
+                        12,
+                        CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                        &tsmr_xyt_back_subscription);
 }
 
 int canard_send_tx_queue(CanardInstance *pins)
@@ -293,6 +316,18 @@ int decode_can_rx(global_data *pdata, CanardTransfer *ptransfer)
     pdata->rotation_speed_to_set_value = ((float*)ptransfer->payload)[0];
     pdata->rotation_speed_to_set = 1;
   }
+  else if( ptransfer->port_id == TSMR_XYT_SET || ptransfer->port_id == TSMR_XYT_BACK_SET )
+  {
+    if(ptransfer->payload_size != 12)
+      return 0;
+    pdata->XYtheta_value_x = ((float*)ptransfer->payload)[0];
+    pdata->XYtheta_value_y = ((float*)ptransfer->payload)[1];
+    pdata->XYtheta_value_theta = ((float*)ptransfer->payload)[2];
+    if(ptransfer->port_id == TSMR_XYT_SET )
+      pdata->XYtheta_to_set = 1;
+    else
+      pdata->XYtheta_to_set = 2;
+  }
   else
   {
     return 0;
@@ -403,6 +438,23 @@ int tx_feed_back(global_data *pdata)
     result = canardTxPush(&pdata->can_ins, &transfer);
     canard_send_tx_queue(&pdata->can_ins);
   }
+  if(pdata->XYtheta_to_set != 0)
+  {
+    if(pdata->XYtheta_to_set == 1)
+      transfer.port_id        = TSMR_XYT_GET;
+    else
+      transfer.port_id        = TSMR_XYT_BACK_GET;
+    transfer.transfer_id    = tsmr_xyt_transfer_id;
+    transfer.payload_size   = 12;
+    transfer.payload        = &pdata->XYtheta_value_x;//works by convention
+    if(pdata->XYtheta_to_set == 1)
+      ++tsmr_xyt_transfer_id;
+    else
+      ++tsmr_xyt_back_transfer_id;
+    result = canardTxPush(&pdata->can_ins, &transfer);
+    canard_send_tx_queue(&pdata->can_ins);
+  }
+
 
   (void)result;
 
