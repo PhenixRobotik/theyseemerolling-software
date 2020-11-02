@@ -50,8 +50,8 @@ int main()
 
 
   PID_Status pid_sigma, pid_theta;
-  pid_init(&pid_sigma, &PID_Configuration_sigma);
-  pid_init(&pid_theta, &PID_Configuration_theta);
+  pid_init(&pid_sigma, PID_Configuration_sigma);
+  pid_init(&pid_theta, PID_Configuration_theta);
 
   //FSM_asser fsm_asser;
   init_FSM_asser(&fsm_asser,&pid_sigma,&pid_theta);
@@ -113,6 +113,22 @@ int main()
       {
         set_X_Y_theta(&fsm_asser, data_g.XYtheta_value_x, data_g.XYtheta_value_y, data_g.XYtheta_value_theta, 1);
         data_g.XYtheta_to_set = 0;
+      }
+      if(data_g.pid_sigma_to_set)
+      {
+        pid_sigma.conf.Kp = data_g.Kp_sig;
+        pid_sigma.conf.Ki = data_g.Ki_sig;
+        pid_sigma.conf.Kd = data_g.Kd_sig;
+        pid_reset_internal(&pid_sigma);
+        data_g.pid_sigma_to_set = 0;
+      }
+      if(data_g.pid_delta_to_set)
+      {
+        pid_theta.conf.Kp = data_g.Kp_del;
+        pid_theta.conf.Ki = data_g.Ki_del;
+        pid_theta.conf.Kd = data_g.Kd_del;
+        pid_reset_internal(&pid_theta);
+        data_g.pid_delta_to_set = 0;
       }
 
       fsm->run(fsm);

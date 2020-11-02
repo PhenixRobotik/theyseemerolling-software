@@ -33,4 +33,15 @@ typedef struct{
   float XYtheta_value_y;
   float XYtheta_value_theta;
 
+  uint8_t pid_sigma_to_set;
+  float Kp_sig;
+  float Ki_sig;
+  float Kd_sig;
+
+  uint8_t pid_delta_to_set;
+  float Kp_del;
+  float Ki_del;
+  float Kd_del;
+
+
 }global_data;

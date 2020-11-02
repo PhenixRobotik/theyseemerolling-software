@@ -24,13 +24,14 @@ typedef struct {
 
 
 typedef struct {
-  PID_Configuration const* conf;
+  PID_Configuration conf;
 
   double prev_eps;
   double integral;
   double derivate;//robot speed if fix order in time
 } PID_Status;
 
-void pid_init(PID_Status *pid, PID_Configuration const* config);
+void pid_init(PID_Status *pid, PID_Configuration config);
+void pid_reset_internal(PID_Status *pid);
 double pid(PID_Status *pid, double eps);
 bool reached(PID_Status *pid);

@@ -10,25 +10,32 @@
 	#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
 #endif
 
-void pid_init(PID_Status *pid, PID_Configuration const* config)
+void pid_init(PID_Status *pid, PID_Configuration config)
 {
   pid->prev_eps = 0;
   pid->integral = 0;
 	pid->conf = config;
 }
 
+void pid_reset_internal(PID_Status *pid)
+{
+	pid->prev_eps = 0;
+  pid->integral = 0;
+  pid->derivate = 0;
+}
+
 double pid(PID_Status *pid, double eps)
 {
-  eps = min(eps,  pid->conf->max_eps);
-  eps = max(eps, -pid->conf->max_eps);
+  eps = min(eps,  pid->conf.max_eps);
+  eps = max(eps, -pid->conf.max_eps);
 
-	pid->derivate=(eps - pid->prev_eps) / pid->conf->Te;
+	pid->derivate=(eps - pid->prev_eps) / pid->conf.Te;
 
-  pid->integral += pid->conf->Te * eps;
+  pid->integral += pid->conf.Te * eps;
   double output =
-      pid->conf->Kp * eps
-    + pid->conf->Ki * pid->integral
-    + pid->conf->Kd * pid->derivate;
+      pid->conf.Kp * eps
+    + pid->conf.Ki * pid->integral
+    + pid->conf.Kd * pid->derivate;
 
   pid->prev_eps = eps;
   return output;
@@ -37,8 +44,8 @@ double pid(PID_Status *pid, double eps)
 bool reached(PID_Status *pid)
 {
 	return (
-		(fabs(pid->prev_eps) < pid->conf->position_tolerance)
+		(fabs(pid->prev_eps) < pid->conf.position_tolerance)
 		&&
-		(fabs(pid->derivate)<pid->conf->speed_tolerance)
+		(fabs(pid->derivate)<pid->conf.speed_tolerance)
 	);
 }
