@@ -77,6 +77,8 @@ static CanardRxSubscription tsmr_xyt_subscription;
 static CanardRxSubscription tsmr_xyt_back_subscription;
 static CanardRxSubscription tsmr_pid_sigma_subscription;
 static CanardRxSubscription tsmr_pid_delta_subscription;
+static CanardRxSubscription tsmr_pid_sigma_tolerances_subscription;
+static CanardRxSubscription tsmr_pid_delta_tolerances_subscription;
 
 static volatile int tsmr_out_transfer_id;
 static volatile int tsmr_encl_transfer_id;
@@ -91,6 +93,8 @@ static volatile int tsmr_xyt_transfer_id;
 static volatile int tsmr_xyt_back_transfer_id;
 static volatile int tsmr_pid_sigma_transfer_id;
 static volatile int tsmr_pid_delta_transfer_id;
+static volatile int tsmr_pid_sigma_tolerances_transfer_id;
+static volatile int tsmr_pid_delta_tolerances_transfer_id;
 
 
 static void* memAllocate(CanardInstance* const ins, const size_t amount)
@@ -122,6 +126,8 @@ void init_can_link(global_data *pdata)
   pdata->XYtheta_to_set = 0;
   pdata->pid_sigma_to_set = 0;
   pdata->pid_delta_to_set = 0;
+  pdata->pid_sigma_tolerances_to_set = 0;
+  pdata->pid_delta_tolerances_to_set = 0;
 
   tsmr_out_transfer_id = 0;
   tsmr_encl_transfer_id = 0;
@@ -136,6 +142,8 @@ void init_can_link(global_data *pdata)
   tsmr_xyt_back_transfer_id = 0;
   tsmr_pid_sigma_transfer_id = 0;
   tsmr_pid_delta_transfer_id = 0;
+  tsmr_pid_sigma_tolerances_transfer_id = 0;
+  tsmr_pid_delta_tolerances_transfer_id = 0;
 
   pdata->can_ins = canardInit(&memAllocate, &memFree);
   pdata->can_ins.mtu_bytes = CANARD_MTU_CAN_CLASSIC;  // Defaults to 64 (CAN FD); here we select Classic CAN.
@@ -229,6 +237,18 @@ void init_can_link(global_data *pdata)
                         12,
                         CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
                         &tsmr_pid_delta_subscription);
+  (void) canardRxSubscribe(&pdata->can_ins,
+                        CanardTransferKindMessage,
+                        TSMR_PID_SIGMA_T_SET,
+                        12,
+                        CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                        &tsmr_pid_sigma_tolerances_subscription);
+  (void) canardRxSubscribe(&pdata->can_ins,
+                        CanardTransferKindMessage,
+                        TSMR_PID_DELTA_T_SET,
+                        12,
+                        CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
+                        &tsmr_pid_delta_tolerances_subscription);
 }
 
 int canard_send_tx_queue(CanardInstance *pins)
@@ -371,6 +391,24 @@ int decode_can_rx(global_data *pdata, CanardTransfer *ptransfer)
     pdata->Ki_del = ((float*)ptransfer->payload)[1];
     pdata->Kd_del = ((float*)ptransfer->payload)[2];
     pdata->pid_delta_to_set = 1;
+  }
+  else if( ptransfer->port_id == TSMR_PID_SIGMA_T_SET )
+  {
+    if(ptransfer->payload_size != 12)
+      return 0;
+    pdata->max_eps_sig = ((float*)ptransfer->payload)[0];
+    pdata->position_tolerance_sig = ((float*)ptransfer->payload)[1];
+    pdata->speed_tolerance_sig = ((float*)ptransfer->payload)[2];
+    pdata->pid_sigma_tolerances_to_set = 1;
+  }
+  else if( ptransfer->port_id == TSMR_PID_DELTA_T_SET )
+  {
+    if(ptransfer->payload_size != 12)
+      return 0;
+    pdata->max_eps_del = ((float*)ptransfer->payload)[0];
+    pdata->position_tolerance_del = ((float*)ptransfer->payload)[1];
+    pdata->speed_tolerance_del = ((float*)ptransfer->payload)[2];
+    pdata->pid_delta_tolerances_to_set = 1;
   }
   else
   {
@@ -515,6 +553,26 @@ int tx_feed_back(global_data *pdata)
     transfer.payload_size   = 12;
     transfer.payload        = &pdata->Kp_del;//works by convention
     ++tsmr_pid_delta_transfer_id;
+    result = canardTxPush(&pdata->can_ins, &transfer);
+    canard_send_tx_queue(&pdata->can_ins);
+  }
+  if(pdata->pid_sigma_tolerances_to_set != 0)
+  {
+    transfer.port_id        = TSMR_PID_SIGMA_T_GET;
+    transfer.transfer_id    = tsmr_pid_sigma_tolerances_transfer_id;
+    transfer.payload_size   = 12;
+    transfer.payload        = &pdata->max_eps_sig;//works by convention
+    ++tsmr_pid_sigma_tolerances_transfer_id;
+    result = canardTxPush(&pdata->can_ins, &transfer);
+    canard_send_tx_queue(&pdata->can_ins);
+  }
+  if(pdata->pid_delta_tolerances_to_set != 0)
+  {
+    transfer.port_id        = TSMR_PID_DELTA_T_GET;
+    transfer.transfer_id    = tsmr_pid_delta_tolerances_transfer_id;
+    transfer.payload_size   = 12;
+    transfer.payload        = &pdata->max_eps_del;//works by convention
+    ++tsmr_pid_delta_tolerances_transfer_id;
     result = canardTxPush(&pdata->can_ins, &transfer);
     canard_send_tx_queue(&pdata->can_ins);
   }

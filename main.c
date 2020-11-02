@@ -130,6 +130,20 @@ int main()
         pid_reset_internal(&pid_theta);
         data_g.pid_delta_to_set = 0;
       }
+      if(data_g.pid_sigma_tolerances_to_set)
+      {
+        pid_sigma.conf.max_eps = data_g.max_eps_sig;
+        pid_sigma.conf.position_tolerance = data_g.position_tolerance_sig;
+        pid_sigma.conf.speed_tolerance = data_g.speed_tolerance_sig;
+        data_g.pid_sigma_tolerances_to_set = 0;
+      }
+      if(data_g.pid_delta_tolerances_to_set)
+      {
+        pid_theta.conf.max_eps = data_g.max_eps_del;
+        pid_theta.conf.position_tolerance = data_g.position_tolerance_del;
+        pid_theta.conf.speed_tolerance = data_g.speed_tolerance_del;
+        data_g.pid_delta_tolerances_to_set = 0;
+      }
 
       fsm->run(fsm);
       get_order(&fsm_asser, &sum_goal, &diff_goal);
@@ -163,6 +177,9 @@ int main()
     }while(dt<MAIN_LOOP_PERIOD);
     t0 = t1;
     compute_speeds(dt);
+    pid_sigma.conf.Te = dt;
+    pid_theta.conf.Te = dt;
+
   }
 
   // TODO : priorités interruptions

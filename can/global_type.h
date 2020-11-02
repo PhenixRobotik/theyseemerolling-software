@@ -43,5 +43,15 @@ typedef struct{
   float Ki_del;
   float Kd_del;
 
+  uint8_t pid_sigma_tolerances_to_set;
+  float max_eps_sig;
+  float position_tolerance_sig;
+  float speed_tolerance_sig;
+
+  uint8_t pid_delta_tolerances_to_set;
+  float max_eps_del;
+  float position_tolerance_del;
+  float speed_tolerance_del;
+
 
 }global_data;
